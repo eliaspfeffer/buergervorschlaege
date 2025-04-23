@@ -51,8 +51,25 @@ const proposalAnalysisSchema = new mongoose.Schema(
         min: 0,
         max: 1,
       },
+      sustainability: {
+        type: Number,
+        min: 0,
+        max: 1,
+      },
+      innovation: {
+        type: Number,
+        min: 0,
+        max: 1,
+      },
       strengths: [String],
       weaknesses: [String],
+      politicalDomains: [String],
+      societalBenefit: String,
+      costBenefitRatio: {
+        type: String,
+        enum: ["niedrig", "mittel", "hoch"],
+        default: "mittel",
+      },
       summary: String,
     },
     suggestedCategories: [

@@ -224,32 +224,81 @@ Bitte gib deine Antwort im folgenden JSON-Format zurück:
 async function evaluateProposal(proposal) {
   try {
     const prompt = `
-Bitte bewerte den folgenden Bürgervorschlag nach den Kriterien Qualität, Relevanz und Umsetzbarkeit.
+# Aufgabe: Umfassende Bewertung eines Bürgervorschlags
 
-Vorschlag:
-Titel: ${proposal.title}
-Inhalt: ${proposal.content}
-Kategorie: ${
+## Kontext
+Du bist ein Politikberater und Experte für öffentliche Verwaltung, der einen Bürgervorschlag für Politiker und Entscheidungsträger bewerten soll. Deine Bewertung wird sowohl Bürgern als auch Politikern angezeigt und soll helfen, den Wert des Vorschlags einzuschätzen.
+
+## Zu bewertender Vorschlag
+**Titel:** ${proposal.title}
+**Inhalt:** ${proposal.content}
+**Kategorie:** ${
       proposal.categories
         ?.map((c) => c.category?.name)
         .filter(Boolean)
         .join(", ") || "Keine Kategorie"
     }
 
-Qualität: Bewerte die Klarheit, Vollständigkeit und Genauigkeit des Vorschlags.
-Relevanz: Bewerte, wie relevant der Vorschlag für öffentliche Belange und aktuelle Probleme ist.
-Umsetzbarkeit: Bewerte, wie realistisch die Umsetzung des Vorschlags ist.
+## Bewertungskriterien
+Bewerte den Vorschlag auf einer Skala von 0 bis 1 (wobei 1 das Höchste ist) nach folgenden Kriterien:
 
-Gib deine Antwort im folgenden JSON-Format zurück:
+1. **Qualität (0-1)**: 
+   - Wie klar, durchdacht und gut formuliert ist der Vorschlag?
+   - Ist er faktenbasiert und logisch aufgebaut?
+   - Berücksichtigt er verschiedene Perspektiven?
+
+2. **Relevanz (0-1)**: 
+   - Wie wichtig ist das angesprochene Problem für die Gesellschaft?
+   - Betrifft es viele Bürger oder nur eine kleine Gruppe?
+   - Adressiert es aktuelle oder zukünftige Herausforderungen?
+
+3. **Umsetzbarkeit (0-1)**: 
+   - Wie realistisch ist die Umsetzung des Vorschlags?
+   - Berücksichtigt er rechtliche, finanzielle und praktische Aspekte?
+   - Ist der Aufwand im Verhältnis zum erwarteten Nutzen angemessen?
+
+4. **Nachhaltigkeit (0-1)**: 
+   - Wie langfristig wirksam ist der Vorschlag?
+   - Berücksichtigt er ökologische, soziale und ökonomische Nachhaltigkeit?
+   - Schafft er dauerhafte Lösungen statt nur kurzfristiger Verbesserungen?
+
+5. **Innovationsgrad (0-1)**: 
+   - Wie neuartig und kreativ ist der Ansatz?
+   - Bietet er neue Lösungswege für bekannte Probleme?
+   - Nutzt er moderne Technologien oder Methoden?
+
+## Zusätzliche Analyse
+- **Stärken**: Liste 2-4 zentrale Stärken des Vorschlags auf
+- **Schwächen**: Liste 2-4 wesentliche Schwächen oder Verbesserungspotenziale auf
+- **Politische Einordnung**: Welche politischen Ressorts oder Ministerien wären für die Umsetzung zuständig?
+- **Gesellschaftlicher Nutzen**: Welchen konkreten Mehrwert schafft dieser Vorschlag für die Gesellschaft?
+- **Kostenabschätzung**: Grobe Einschätzung der Kosten (niedrig/mittel/hoch) und des Nutzens im Verhältnis dazu
+
+## Erwartetes Ausgabeformat (JSON)
+Bitte gib deine Bewertung ausschließlich im folgenden JSON-Format zurück:
+
+\`\`\`json
 {
-  "quality": 0.85, // Wert zwischen 0 und 1
-  "relevance": 0.9, // Wert zwischen 0 und 1
-  "feasibility": 0.7, // Wert zwischen 0 und 1
-  "keywords": ["Schlüsselwort1", "Schlüsselwort2"],
-  "strengths": ["Stärke 1", "Stärke 2"],
+  "quality": 0.85,
+  "relevance": 0.9,
+  "feasibility": 0.7,
+  "sustainability": 0.8,
+  "innovation": 0.65,
+  "keywords": ["Keyword1", "Keyword2", "Keyword3"],
+  "strengths": ["Stärke 1", "Stärke 2", "Stärke 3"],
   "weaknesses": ["Schwäche 1", "Schwäche 2"],
-  "summary": "Zusammenfassende Bewertung"
+  "politicalDomains": ["Ressort 1", "Ressort 2"],
+  "societalBenefit": "Kurze prägnante Beschreibung des gesellschaftlichen Nutzens",
+  "costBenefitRatio": "niedrig/mittel/hoch",
+  "summary": "Eine ausgewogene, objektive Zusammenfassung der Bewertung in 2-3 Sätzen."
 }
+\`\`\`
+
+Wichtige Hinweise:
+- Bewahre eine sachliche, neutrale Perspektive
+- Sei respektvoll gegenüber dem Vorschlag, aber auch ehrlich in der Bewertung
+- Berücksichtige verschiedene politische Perspektiven
+- Liefere eine faktenbasierte, konstruktive Bewertung
 `;
 
     const result = await model.generateContent(prompt);
@@ -271,9 +320,14 @@ Gib deine Antwort im folgenden JSON-Format zurück:
       quality: 0.5,
       relevance: 0.5,
       feasibility: 0.5,
+      sustainability: 0.5,
+      innovation: 0.5,
       keywords: [],
       strengths: [],
       weaknesses: [],
+      politicalDomains: [],
+      societalBenefit: "Keine Bewertung möglich",
+      costBenefitRatio: "mittel",
       summary: "Fehler bei der Bewertung. Neutrale Standardbewertung vergeben.",
     };
   }
@@ -329,9 +383,93 @@ Gib deine Antwort im folgenden JSON-Format zurück:
   }
 }
 
+/**
+ * Analysiert eine Zusammenfassung und liefert KI-Bewertungen für die Qualitätskriterien
+ * @param {string} summary - Die Zusammenfassung, die analysiert werden soll
+ * @param {Object} proposal - Der Originalvorschlag für den Kontext
+ * @returns {Object} Die Bewertung der Qualitätskriterien
+ */
+async function analyzeSummaryAndSave(summary, proposal) {
+  try {
+    const prompt = `
+# Aufgabe: Bewertung einer Vorschlagszusammenfassung
+
+## Kontext
+Du erhältst die Zusammenfassung eines Bürgervorschlags. Deine Aufgabe ist es, diese Zusammenfassung zu bewerten und Qualitätskriterien zu ermitteln.
+
+## Zu bewertende Zusammenfassung
+**Zusammenfassung:** ${summary}
+
+**Ursprünglicher Vorschlagstitel:** ${proposal.title || "Kein Titel verfügbar"}
+
+## Bewertungskriterien
+Bewerte die Zusammenfassung auf einer Skala von 0 bis 1 (wobei 1 das Höchste ist) nach folgenden Kriterien:
+
+1. **Qualität (0-1)**: 
+   - Wie klar, durchdacht und gut formuliert ist die Zusammenfassung?
+   - Gibt sie den ursprünglichen Vorschlag treffend wieder?
+
+2. **Relevanz (0-1)**: 
+   - Wie relevant erscheint das zusammengefasste Anliegen für die Gesellschaft?
+   - Wird die Wichtigkeit des Themas deutlich?
+
+3. **Umsetzbarkeit (0-1)**: 
+   - Erscheint der zusammengefasste Vorschlag realistisch umsetzbar?
+   - Werden praktische Aspekte berücksichtigt?
+
+4. **Nachhaltigkeit (0-1)**: 
+   - Adressiert die Zusammenfassung langfristige Lösungen?
+   - Werden ökologische, soziale oder ökonomische Nachhaltigkeitsaspekte berücksichtigt?
+
+5. **Innovationsgrad (0-1)**: 
+   - Beschreibt die Zusammenfassung einen innovativen oder kreativen Ansatz?
+   - Werden neue Lösungswege aufgezeigt?
+
+## Erwartetes Ausgabeformat (JSON)
+Bitte gib deine Bewertung ausschließlich im folgenden JSON-Format zurück:
+
+\`\`\`json
+{
+  "quality": 0.85,
+  "relevance": 0.9,
+  "feasibility": 0.7,
+  "sustainability": 0.8,
+  "innovation": 0.65,
+  "summary": "Eine kurze Meta-Einschätzung der Zusammenfassung in 1-2 Sätzen."
+}
+\`\`\`
+`;
+
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    const text = response.text();
+
+    // Extrahiere das JSON aus der Antwort
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]);
+    }
+
+    throw new Error(
+      "Konnte kein gültiges JSON aus der Gemini-Antwort extrahieren"
+    );
+  } catch (error) {
+    console.error("Fehler bei der Analyse der Zusammenfassung:", error);
+    return {
+      quality: 0.5,
+      relevance: 0.5,
+      feasibility: 0.5,
+      sustainability: 0.5,
+      innovation: 0.5,
+      summary: "Fehler bei der Analyse. Neutrale Standardbewertung vergeben.",
+    };
+  }
+}
+
 module.exports = {
   analyzeProposalSimilarity,
   mergeProposals,
   evaluateProposal,
   suggestCategories,
+  analyzeSummaryAndSave,
 };

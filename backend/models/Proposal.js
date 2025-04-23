@@ -143,6 +143,23 @@ const proposalSchema = new mongoose.Schema(
         min: 0,
         max: 1,
       },
+      sustainability: {
+        type: Number,
+        min: 0,
+        max: 1,
+      },
+      innovation: {
+        type: Number,
+        min: 0,
+        max: 1,
+      },
+      politicalDomains: [String],
+      societalBenefit: String,
+      costBenefitRatio: {
+        type: String,
+        enum: ["niedrig", "mittel", "hoch"],
+        default: "mittel",
+      },
       sentiment: String,
       keywords: [String],
       similarProposals: [
@@ -201,13 +218,17 @@ proposalSchema.virtual("aiAnalysis.combinedScore").get(function () {
     this.aiAnalysis &&
     this.aiAnalysis.quality &&
     this.aiAnalysis.relevance &&
-    this.aiAnalysis.feasibility
+    this.aiAnalysis.feasibility &&
+    this.aiAnalysis.sustainability &&
+    this.aiAnalysis.innovation
   ) {
     return (
       (this.aiAnalysis.quality +
         this.aiAnalysis.relevance +
-        this.aiAnalysis.feasibility) /
-      3
+        this.aiAnalysis.feasibility +
+        this.aiAnalysis.sustainability +
+        this.aiAnalysis.innovation) /
+      5
     );
   }
   return null;

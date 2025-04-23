@@ -349,48 +349,664 @@ async function loadDetailedStatistics() {
 // Vorschlagsdetails laden
 async function loadProposalDetails(proposalId) {
   try {
-    const response = await fetch(`${API_BASE_URL}/proposals/${proposalId}`);
-    const proposal = await response.json();
-
-    // Bei Fehler zur Übersichtsseite umleiten
-    if (!proposal) {
-      window.location.href = "proposals.html";
-      return;
+    // Hauptcontainer für Fehlermeldungen vorbereiten
+    const mainContainer = document.querySelector(".container .row");
+    if (mainContainer) {
+      // Lade-Indikator hinzufügen
+      const loadingIndicator = document.createElement("div");
+      loadingIndicator.className = "col-12 text-center my-4";
+      loadingIndicator.innerHTML = `
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Lade...</span>
+        </div>
+        <p class="mt-2">Vorschlag wird geladen...</p>
+      `;
+      mainContainer.innerHTML = "";
+      mainContainer.appendChild(loadingIndicator);
     }
 
-    // Details anzeigen
+    console.log(`Lade Vorschlag mit ID: ${proposalId}`);
+    const response = await fetch(`${API_BASE_URL}/proposals/${proposalId}`);
+
+    if (!response.ok) {
+      throw new Error(
+        `HTTP-Fehler beim Laden des Vorschlags: ${response.status}`
+      );
+    }
+
+    const proposal = await response.json();
+    console.log("Vorschlag geladen:", proposal);
+
+    if (!proposal || !proposal._id) {
+      throw new Error("Der geladene Vorschlag enthält keine gültigen Daten");
+    }
+
+    // Hauptcontainer zurücksetzen
+    if (mainContainer) {
+      mainContainer.innerHTML = "";
+
+      // Ursprünglichen HTML-Aufbau wiederherstellen
+      mainContainer.innerHTML = `
+        <div class="col-lg-8">
+          <div class="card mb-4">
+            <div class="card-body">
+              <h1 id="proposal-title" class="card-title mb-3">Vorschlagstitel wird geladen...</h1>
+              <div class="d-flex flex-wrap align-items-center mb-3">
+                <span id="proposal-category" class="proposal-category me-2">Kategorie</span>
+                <span id="proposal-status" class="status-badge me-2">Status</span>
+                <small class="text-muted me-3">Eingereicht am <span id="proposal-date">Datum</span></small>
+                <small class="text-muted">Von <span id="proposal-author">Autor</span></small>
+              </div>
+              <div class="mb-4">
+                <p id="proposal-content" class="card-text">Inhalt wird geladen...</p>
+              </div>
+              <div class="mb-3">
+                <h6>Schlagwörter:</h6>
+                <div id="proposal-tags"></div>
+              </div>
+              <div class="d-flex justify-content-between align-items-center">
+                <button class="btn btn-primary" onclick="voteForProposal('${proposalId}')">
+                  <i class="bi bi-hand-thumbs-up me-1"></i> Unterstützen (<span id="proposal-votes">0</span>)
+                </button>
+                <div>
+                  <button class="btn btn-outline-primary me-2">
+                    <i class="bi bi-share me-1"></i> Teilen
+                  </button>
+                  <button class="btn btn-outline-primary">
+                    <i class="bi bi-flag me-1"></i> Melden
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+              <h5 class="card-title mb-0">KI-Analyse</h5>
+            </div>
+            <div class="card-body" id="ai-analysis-container">
+              <div class="mb-3">
+                <label class="form-label">Qualität:</label>
+                <div class="progress">
+                  <div id="ai-quality" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Relevanz:</label>
+                <div class="progress">
+                  <div id="ai-relevance" class="progress-bar bg-info" role="progressbar" style="width: 0%"></div>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Umsetzbarkeit:</label>
+                <div class="progress">
+                  <div id="ai-feasibility" class="progress-bar bg-warning" role="progressbar" style="width: 0%"></div>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Nachhaltigkeit:</label>
+                <div class="progress">
+                  <div id="ai-sustainability" class="progress-bar bg-primary" role="progressbar" style="width: 0%"></div>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Innovationsgrad:</label>
+                <div class="progress">
+                  <div id="ai-innovation" class="progress-bar bg-danger" role="progressbar" style="width: 0%"></div>
+                </div>
+              </div>
+              <div class="row mt-4">
+                <div class="col-md-6 mb-3">
+                  <h6>Stärken:</h6>
+                  <ul id="ai-strengths" class="list-group list-group-flush">
+                    <li class="list-group-item text-muted">Wird geladen...</li>
+                  </ul>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <h6>Verbesserungspotenziale:</h6>
+                  <ul id="ai-weaknesses" class="list-group list-group-flush">
+                    <li class="list-group-item text-muted">Wird geladen...</li>
+                  </ul>
+                </div>
+              </div>
+              <div class="mb-3">
+                <h6>Zusammenfassung:</h6>
+                <p id="ai-summary" class="card-text">Wird geladen...</p>
+              </div>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <h6>Kosten-Nutzen-Verhältnis:</h6>
+                  <p id="ai-cost-benefit">Wird geladen...</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <h6>Politische Zuständigkeiten:</h6>
+                  <p id="ai-political-domains">Wird geladen...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Neuer Abschnitt für Zusammenfassungserstellung und -analyse -->
+          <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+              <h5 class="card-title mb-0">Zusammenfassung erstellen und analysieren</h5>
+            </div>
+            <div class="card-body">
+              <p class="mb-3">
+                Sie können eine eigene Zusammenfassung dieses Vorschlags erstellen und diese von der KI analysieren lassen.
+                Die Analyse wird die Qualität, Relevanz, Umsetzbarkeit, Nachhaltigkeit und den Innovationsgrad der Zusammenfassung bewerten.
+              </p>
+              <div id="summary-analysis-feedback"></div>
+              <form id="summary-form">
+                <div class="mb-3">
+                  <label for="summary-text" class="form-label">Zusammenfassung:</label>
+                  <textarea class="form-control" id="summary-text" rows="5" 
+                    placeholder="Schreiben Sie hier Ihre Zusammenfassung des Vorschlags..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                  <i class="bi bi-search me-1"></i> Zusammenfassung analysieren
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+              <h5 class="card-title mb-0">Kommentare</h5>
+            </div>
+            <div class="card-body">
+              <div id="comments-list"></div>
+              <hr />
+              <h6>Neuen Kommentar hinzufügen</h6>
+              <form id="comment-form">
+                <div class="mb-3">
+                  <textarea class="form-control" id="comment-content" rows="3" 
+                    placeholder="Schreiben Sie Ihren Kommentar..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Kommentar absenden</button>
+              </form>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-lg-4">
+          <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+              <h5 class="card-title mb-0">Zuständigkeit</h5>
+            </div>
+            <div class="card-body">
+              <p>Dieser Vorschlag wurde an folgendes Ministerium weitergeleitet:</p>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-building me-2 fs-4"></i>
+                <span id="proposal-ministry" class="fs-5">Ministerium wird geladen...</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+              <h5 class="card-title mb-0">Ähnliche Vorschläge</h5>
+            </div>
+            <div class="card-body">
+              <div id="similar-proposals-list" class="list-group list-group-flush">
+                <div class="text-center text-muted p-3">
+                  <div class="spinner-border spinner-border-sm" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                  <span class="ms-2">Ähnliche Vorschläge werden geladen...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-header bg-primary text-white">
+              <h5 class="card-title mb-0">Statusverlauf</h5>
+            </div>
+            <div class="card-body">
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <div>
+                    <strong>Eingereicht</strong>
+                    <div class="text-muted">15.03.2025</div>
+                  </div>
+                  <span class="badge bg-success rounded-pill">✓</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <div>
+                    <strong>KI-Analyse</strong>
+                    <div class="text-muted">15.03.2025</div>
+                  </div>
+                  <span class="badge bg-success rounded-pill">✓</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <div>
+                    <strong>Ministerium zugewiesen</strong>
+                    <div class="text-muted">16.03.2025</div>
+                  </div>
+                  <span class="badge bg-success rounded-pill">✓</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <div>
+                    <strong>In Bearbeitung</strong>
+                    <div class="text-muted">Ausstehend</div>
+                  </div>
+                  <span class="badge bg-secondary rounded-pill">...</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Grundlegende Vorschlagsinformationen anzeigen
     document.getElementById("proposal-title").textContent = proposal.title;
     document.getElementById("proposal-content").textContent = proposal.content;
-    document.getElementById("proposal-category").textContent =
-      getCategoryNames(proposal);
-    document.getElementById("proposal-status").textContent = getStatusText(
-      proposal.status
-    );
     document.getElementById("proposal-date").textContent = formatDate(
       proposal.createdAt
     );
-    document.getElementById("proposal-votes").textContent = proposal.votes || 0;
 
-    // Benutzerinfo anzeigen, falls vorhanden
-    if (proposal.user) {
-      const userName = `${proposal.user.firstName || ""} ${
-        proposal.user.lastName || ""
-      }`.trim();
-      document.getElementById("proposal-author").textContent =
-        userName || "Anonymer Nutzer";
-    } else {
+    // Autor anzeigen (wenn nicht anonym)
+    if (proposal.isAnonymous) {
       document.getElementById("proposal-author").textContent =
         "Anonymer Nutzer";
+    } else if (proposal.user && proposal.user.firstName) {
+      document.getElementById("proposal-author").textContent = `${
+        proposal.user.firstName
+      } ${proposal.user.lastName || ""}`;
+    } else {
+      document.getElementById("proposal-author").textContent =
+        "Unbekannter Nutzer";
     }
 
-    // Kommentare laden
-    loadProposalComments(proposalId);
+    // Status anzeigen
+    if (proposal.status) {
+      const statusElement = document.getElementById("proposal-status");
+      if (statusElement) {
+        statusElement.textContent = getStatusText(proposal.status);
+        statusElement.className = `status-badge status-${proposal.status}`;
+      }
+    }
 
-    // Kommentarformular einrichten
-    setupCommentForm(proposalId);
+    // Stimmen anzeigen
+    if (proposal.votes !== undefined) {
+      const votesElement = document.getElementById("proposal-votes");
+      if (votesElement) {
+        votesElement.textContent = proposal.votes;
+      }
+    }
+
+    // Kategorien anzeigen
+    const categoryElement = document.getElementById("proposal-category");
+    if (categoryElement) {
+      if (proposal.categories && proposal.categories.length > 0) {
+        const categoryNames = getCategoryNames(proposal);
+        categoryElement.textContent = Array.isArray(categoryNames)
+          ? categoryNames.join(", ")
+          : categoryNames;
+      } else {
+        categoryElement.textContent = "Keine Kategorie";
+      }
+    }
+
+    // Zuständiges Ministerium anzeigen
+    const ministryElement = document.getElementById("proposal-ministry");
+    if (ministryElement) {
+      if (
+        proposal.ministries &&
+        proposal.ministries.length > 0 &&
+        proposal.ministries[0].ministry
+      ) {
+        ministryElement.textContent = proposal.ministries[0].ministry.name;
+      } else {
+        ministryElement.textContent = "Noch nicht zugewiesen";
+      }
+    }
+
+    // Tags anzeigen
+    const tagsContainer = document.getElementById("proposal-tags");
+    if (tagsContainer) {
+      if (proposal.tags && proposal.tags.length > 0) {
+        tagsContainer.innerHTML = "";
+        proposal.tags.forEach((tag) => {
+          const tagElement = document.createElement("span");
+          tagElement.className = "badge bg-secondary me-1";
+          tagElement.textContent = tag.name || tag;
+          tagsContainer.appendChild(tagElement);
+        });
+      } else {
+        tagsContainer.innerHTML = "<span class='text-muted'>Keine Tags</span>";
+      }
+    }
+
+    try {
+      // KI-Analyse laden
+      await loadProposalAnalysis(proposalId);
+    } catch (analysisError) {
+      console.error("Fehler beim Laden der KI-Analyse:", analysisError);
+      const analysisContainer = document.getElementById(
+        "ai-analysis-container"
+      );
+      if (analysisContainer) {
+        analysisContainer.innerHTML = `
+          <div class="alert alert-warning">
+            <h5>Fehler beim Laden der KI-Analyse</h5>
+            <p>${analysisError.message}</p>
+            <button class="btn btn-primary mt-2" onclick="loadProposalAnalysis('${proposalId}')">
+              Erneut versuchen
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    try {
+      // Kommentare laden
+      await loadProposalComments(proposalId);
+    } catch (commentsError) {
+      console.error("Fehler beim Laden der Kommentare:", commentsError);
+      const commentsContainer = document.getElementById("comments-list");
+      if (commentsContainer) {
+        commentsContainer.innerHTML = `
+          <div class="alert alert-warning">
+            <p>Fehler beim Laden der Kommentare: ${commentsError.message}</p>
+            <button class="btn btn-sm btn-primary" onclick="loadProposalComments('${proposalId}')">
+              Erneut versuchen
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    try {
+      // Kommentarformular einrichten
+      setupCommentForm(proposalId);
+    } catch (setupError) {
+      console.error(
+        "Fehler beim Einrichten des Kommentarformulars:",
+        setupError
+      );
+    }
+
+    try {
+      // Zusammenfassungsformular einrichten
+      setupSummaryForm(proposalId);
+    } catch (setupError) {
+      console.error(
+        "Fehler beim Einrichten des Zusammenfassungsformulars:",
+        setupError
+      );
+      const feedbackContainer = document.getElementById(
+        "summary-analysis-feedback"
+      );
+      if (feedbackContainer) {
+        feedbackContainer.innerHTML = `
+          <div class="alert alert-warning">
+            <p>Fehler beim Einrichten des Formularhandlers: ${setupError.message}</p>
+          </div>
+        `;
+      }
+    }
   } catch (error) {
     console.error("Fehler beim Laden der Vorschlagsdetails:", error);
-    window.location.href = "proposals.html";
+
+    // Statt Umleitung zeigen wir eine Fehlermeldung auf der Seite an
+    const mainContainer = document.querySelector(".container .row");
+    if (mainContainer) {
+      mainContainer.innerHTML = `
+        <div class="col-12">
+          <div class="alert alert-danger my-4">
+            <h4 class="alert-heading">Fehler beim Laden des Vorschlags</h4>
+            <p>${
+              error.message || "Es ist ein unerwarteter Fehler aufgetreten."
+            }</p>
+            <hr>
+            <p class="mb-0">
+              <button class="btn btn-primary" onclick="location.reload()">Erneut versuchen</button>
+              <a href="proposals.html" class="btn btn-outline-secondary ms-2">Zurück zur Übersicht</a>
+            </p>
+          </div>
+        </div>
+      `;
+    }
+  }
+}
+
+// Neue Funktion: KI-Analyse für einen Vorschlag laden
+async function loadProposalAnalysis(proposalId) {
+  try {
+    // Zuerst versuchen, vorhandene Analyse zu laden
+    let response = await fetch(
+      `${API_BASE_URL}/ai/proposals/${proposalId}/analysis`
+    );
+
+    // Wenn keine Analyse gefunden wurde, dynamisch eine neue anfordern
+    if (response.status === 404) {
+      document.getElementById("ai-analysis-container").innerHTML = `
+        <div class="alert alert-info">
+          <div class="d-flex align-items-center">
+            <div class="spinner-border spinner-border-sm me-2" role="status">
+              <span class="visually-hidden">Lade...</span>
+            </div>
+            <span>KI-Analyse wird erstellt... Dies kann einen Moment dauern.</span>
+          </div>
+        </div>
+      `;
+
+      // Anforderung einer neuen Analyse
+      const analyzeResponse = await fetch(
+        `${API_BASE_URL}/ai/proposals/${proposalId}/analyze`,
+        { method: "POST" }
+      );
+
+      if (!analyzeResponse.ok) {
+        throw new Error(
+          `Fehler bei der Analyse-Anforderung: ${analyzeResponse.status}`
+        );
+      }
+
+      // Nach der Analyse einen Moment warten, damit sie in der Datenbank gespeichert wird
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // Erneut versuchen, die Analyse zu laden
+      response = await fetch(
+        `${API_BASE_URL}/ai/proposals/${proposalId}/analysis`
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          `Die Analyse konnte nicht geladen werden: ${response.status}`
+        );
+      }
+    }
+
+    // Bei anderen Fehlern
+    if (!response.ok) {
+      throw new Error(`HTTP-Fehler: ${response.status}`);
+    }
+
+    const analysis = await response.json();
+
+    // Grundlegende Bewertungskriterien in Fortschrittsbalken anzeigen
+    if (analysis.aiEvaluation) {
+      // Qualität
+      const qualityBar = document.getElementById("ai-quality");
+      if (qualityBar) {
+        const quality = analysis.aiEvaluation.quality * 100;
+        qualityBar.style.width = `${quality}%`;
+        qualityBar.textContent = `${Math.round(quality)}%`;
+      }
+
+      // Relevanz
+      const relevanceBar = document.getElementById("ai-relevance");
+      if (relevanceBar) {
+        const relevance = analysis.aiEvaluation.relevance * 100;
+        relevanceBar.style.width = `${relevance}%`;
+        relevanceBar.textContent = `${Math.round(relevance)}%`;
+      }
+
+      // Umsetzbarkeit
+      const feasibilityBar = document.getElementById("ai-feasibility");
+      if (feasibilityBar) {
+        const feasibility = analysis.aiEvaluation.feasibility * 100;
+        feasibilityBar.style.width = `${feasibility}%`;
+        feasibilityBar.textContent = `${Math.round(feasibility)}%`;
+      }
+
+      // Nachhaltigkeit
+      const sustainabilityBar = document.getElementById("ai-sustainability");
+      if (sustainabilityBar) {
+        const sustainability = analysis.aiEvaluation.sustainability * 100;
+        sustainabilityBar.style.width = `${sustainability}%`;
+        sustainabilityBar.textContent = `${Math.round(sustainability)}%`;
+      }
+
+      // Innovation
+      const innovationBar = document.getElementById("ai-innovation");
+      if (innovationBar) {
+        const innovation = analysis.aiEvaluation.innovation * 100;
+        innovationBar.style.width = `${innovation}%`;
+        innovationBar.textContent = `${Math.round(innovation)}%`;
+      }
+
+      // Stärken und Schwächen anzeigen
+      const strengthsList = document.getElementById("ai-strengths");
+      if (
+        strengthsList &&
+        analysis.aiEvaluation.strengths &&
+        analysis.aiEvaluation.strengths.length > 0
+      ) {
+        strengthsList.innerHTML = "";
+        analysis.aiEvaluation.strengths.forEach((strength) => {
+          const li = document.createElement("li");
+          li.textContent = strength;
+          strengthsList.appendChild(li);
+        });
+      } else if (strengthsList) {
+        strengthsList.innerHTML =
+          "<li class='list-group-item'>Keine spezifischen Stärken identifiziert</li>";
+      }
+
+      const weaknessesList = document.getElementById("ai-weaknesses");
+      if (
+        weaknessesList &&
+        analysis.aiEvaluation.weaknesses &&
+        analysis.aiEvaluation.weaknesses.length > 0
+      ) {
+        weaknessesList.innerHTML = "";
+        analysis.aiEvaluation.weaknesses.forEach((weakness) => {
+          const li = document.createElement("li");
+          li.textContent = weakness;
+          weaknessesList.appendChild(li);
+        });
+      } else if (weaknessesList) {
+        weaknessesList.innerHTML =
+          "<li class='list-group-item'>Keine spezifischen Verbesserungspotenziale identifiziert</li>";
+      }
+
+      // Zusammenfassung anzeigen
+      const summaryElement = document.getElementById("ai-summary");
+      if (summaryElement && analysis.aiEvaluation.summary) {
+        summaryElement.textContent = analysis.aiEvaluation.summary;
+      } else if (summaryElement) {
+        summaryElement.textContent = "Keine Zusammenfassung verfügbar";
+      }
+
+      // Kosten-Nutzen-Verhältnis
+      const costBenefitElement = document.getElementById("ai-cost-benefit");
+      if (costBenefitElement && analysis.aiEvaluation.costBenefitRatio) {
+        let costBenefitClass = "text-warning";
+        if (analysis.aiEvaluation.costBenefitRatio === "niedrig") {
+          costBenefitClass = "text-success";
+        } else if (analysis.aiEvaluation.costBenefitRatio === "hoch") {
+          costBenefitClass = "text-danger";
+        }
+        costBenefitElement.innerHTML = `<span class="${costBenefitClass}">${analysis.aiEvaluation.costBenefitRatio}</span>`;
+      } else if (costBenefitElement) {
+        costBenefitElement.textContent = "mittel";
+      }
+
+      // Politische Bereiche
+      const domainsElement = document.getElementById("ai-political-domains");
+      if (
+        domainsElement &&
+        analysis.aiEvaluation.politicalDomains &&
+        analysis.aiEvaluation.politicalDomains.length > 0
+      ) {
+        domainsElement.textContent =
+          analysis.aiEvaluation.politicalDomains.join(", ");
+      } else if (domainsElement) {
+        domainsElement.textContent =
+          "Keine spezifischen Zuständigkeiten identifiziert";
+      }
+    }
+
+    // Ähnliche Vorschläge anzeigen
+    if (analysis.similarProposals && analysis.similarProposals.length > 0) {
+      const similarProposalsContainer = document.getElementById(
+        "similar-proposals-list"
+      );
+      if (similarProposalsContainer) {
+        similarProposalsContainer.innerHTML = "";
+
+        for (const similarProposal of analysis.similarProposals) {
+          try {
+            // Details des ähnlichen Vorschlags abrufen
+            const propResponse = await fetch(
+              `${API_BASE_URL}/proposals/${similarProposal.proposal}`
+            );
+            if (propResponse.ok) {
+              const propData = await propResponse.json();
+
+              const similarity = Math.round(
+                similarProposal.similarityScore * 100
+              );
+              const listItem = document.createElement("a");
+              listItem.href = `proposal-detail.html?id=${propData._id}`;
+              listItem.className = "list-group-item list-group-item-action";
+              listItem.innerHTML = `
+                <div class="d-flex w-100 justify-content-between">
+                  <h6 class="mb-1">${propData.title}</h6>
+                  <small class="text-muted">${formatDate(
+                    propData.createdAt
+                  )}</small>
+                </div>
+                <small class="text-muted">${
+                  propData.votes || 0
+                } Unterstützer · ${similarity}% Ähnlichkeit</small>
+              `;
+
+              similarProposalsContainer.appendChild(listItem);
+            }
+          } catch (error) {
+            console.error("Fehler beim Laden ähnlicher Vorschläge:", error);
+          }
+        }
+      }
+    } else {
+      const similarProposalsContainer = document.getElementById(
+        "similar-proposals-list"
+      );
+      if (similarProposalsContainer) {
+        similarProposalsContainer.innerHTML =
+          "<div class='text-center p-3'>Keine ähnlichen Vorschläge gefunden</div>";
+      }
+    }
+  } catch (error) {
+    console.error("Fehler beim Laden der KI-Analyse:", error);
+    document.getElementById("ai-analysis-container").innerHTML = `
+      <div class="alert alert-danger">
+        Bei der Anzeige der KI-Analyse ist ein Fehler aufgetreten: ${
+          error.message
+        }
+      </div>
+      <button class="btn btn-primary mt-2" onclick="loadProposalAnalysis('${getUrlParameter(
+        "id"
+      )}')">
+        Erneut versuchen
+      </button>
+    `;
   }
 }
 
@@ -947,4 +1563,227 @@ async function loadProposalComments(proposalId) {
         '<div class="alert alert-danger">Fehler beim Laden der Kommentare.</div>';
     }
   }
+}
+
+// Analysiert eine Zusammenfassung eines Vorschlags
+async function analyzeSummary(proposalId, summaryText) {
+  try {
+    if (!proposalId || !summaryText) {
+      throw new Error("Proposal ID und Zusammenfassung sind erforderlich");
+    }
+
+    console.log(`Analysiere Zusammenfassung für Vorschlag ${proposalId}`);
+
+    // Feedback-Element aktualisieren
+    const feedbackEl = document.getElementById("summary-analysis-feedback");
+    if (feedbackEl) {
+      feedbackEl.innerHTML = `
+        <div class="alert alert-info">
+          <div class="d-flex align-items-center">
+            <div class="spinner-border spinner-border-sm me-2" role="status">
+              <span class="visually-hidden">Wird analysiert...</span>
+            </div>
+            <span>Die Zusammenfassung wird analysiert. Dies kann einen Moment dauern...</span>
+          </div>
+        </div>
+      `;
+    }
+
+    // API-Aufruf zur Analyse der Zusammenfassung
+    const response = await fetch(
+      `${API_BASE_URL}/ai/proposals/${proposalId}/analyze-summary`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ summary: summaryText }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({
+        message: `HTTP-Fehler: ${response.status}`,
+      }));
+      throw new Error(errorData.message || `HTTP-Fehler: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("Analyseergebnis:", data);
+
+    if (!data || !data.aiEvaluation) {
+      throw new Error("Die API-Antwort enthält keine Analysedaten");
+    }
+
+    // Ergebnisse anzeigen
+    if (feedbackEl) {
+      let qualityScore = data.aiEvaluation.quality || 0;
+      let relevanceScore = data.aiEvaluation.relevance || 0;
+      let feasibilityScore = data.aiEvaluation.feasibility || 0;
+      let sustainabilityScore = data.aiEvaluation.sustainability || 0;
+      let innovationScore = data.aiEvaluation.innovation || 0;
+
+      // Formatiere die Scores als Prozentsätze
+      const formatPercent = (value) => {
+        return Math.round(value * 100);
+      };
+
+      feedbackEl.innerHTML = `
+        <div class="alert alert-success mb-4">
+          <h5><i class="bi bi-check-circle-fill me-2"></i> Analyse abgeschlossen</h5>
+          <p>Die KI-Analyse Ihrer Zusammenfassung ist abgeschlossen. Hier sind die Ergebnisse:</p>
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label fw-bold">Qualität: ${formatPercent(
+            qualityScore
+          )}%</label>
+          <div class="progress">
+            <div class="progress-bar bg-success" role="progressbar" style="width: ${formatPercent(
+              qualityScore
+            )}%" aria-valuenow="${formatPercent(
+        qualityScore
+      )}" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label fw-bold">Relevanz: ${formatPercent(
+            relevanceScore
+          )}%</label>
+          <div class="progress">
+            <div class="progress-bar bg-info" role="progressbar" style="width: ${formatPercent(
+              relevanceScore
+            )}%" aria-valuenow="${formatPercent(
+        relevanceScore
+      )}" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label fw-bold">Umsetzbarkeit: ${formatPercent(
+            feasibilityScore
+          )}%</label>
+          <div class="progress">
+            <div class="progress-bar bg-warning" role="progressbar" style="width: ${formatPercent(
+              feasibilityScore
+            )}%" aria-valuenow="${formatPercent(
+        feasibilityScore
+      )}" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label fw-bold">Nachhaltigkeit: ${formatPercent(
+            sustainabilityScore
+          )}%</label>
+          <div class="progress">
+            <div class="progress-bar bg-primary" role="progressbar" style="width: ${formatPercent(
+              sustainabilityScore
+            )}%" aria-valuenow="${formatPercent(
+        sustainabilityScore
+      )}" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label fw-bold">Innovationsgrad: ${formatPercent(
+            innovationScore
+          )}%</label>
+          <div class="progress">
+            <div class="progress-bar bg-danger" role="progressbar" style="width: ${formatPercent(
+              innovationScore
+            )}%" aria-valuenow="${formatPercent(
+        innovationScore
+      )}" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+        </div>
+        
+        ${
+          data.aiEvaluation.summary
+            ? `
+        <div class="mt-3">
+          <h6 class="fw-bold">Zusammenfassung der Analyse:</h6>
+          <p>${data.aiEvaluation.summary}</p>
+        </div>
+        `
+            : ""
+        }
+      `;
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Fehler bei der Analyse der Zusammenfassung:", error);
+
+    // Benutzerfreundliche Fehlermeldung anzeigen
+    const feedbackEl = document.getElementById("summary-analysis-feedback");
+    if (feedbackEl) {
+      feedbackEl.innerHTML = `
+        <div class="alert alert-danger">
+          <h5><i class="bi bi-exclamation-triangle-fill me-2"></i> Fehler bei der Analyse</h5>
+          <p>${
+            error.message || "Es ist ein unbekannter Fehler aufgetreten."
+          }</p>
+          <button class="btn btn-outline-danger btn-sm mt-2" onclick="document.getElementById('summary-form').dispatchEvent(new Event('submit'))">
+            <i class="bi bi-arrow-clockwise me-1"></i> Erneut versuchen
+          </button>
+        </div>
+      `;
+    }
+
+    throw error; // Für die aufrufende Funktion weiterwerfen
+  }
+}
+
+// Richtet das Zusammenfassungsformular ein
+function setupSummaryForm(proposalId) {
+  const form = document.getElementById("summary-form");
+  if (!form) {
+    console.error("Zusammenfassungsformular nicht gefunden");
+    return;
+  }
+
+  console.log(
+    `Richte Zusammenfassungsformular für Vorschlag ${proposalId} ein`
+  );
+
+  form.addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    try {
+      const summaryText = document.getElementById("summary-text").value.trim();
+      if (!summaryText) {
+        throw new Error("Bitte geben Sie eine Zusammenfassung ein");
+      }
+
+      console.log(
+        "Sende Zusammenfassung zur Analyse:",
+        summaryText.substring(0, 50) + "..."
+      );
+
+      // Formulareingabe deaktivieren
+      const submitButton = form.querySelector("button[type=submit]");
+      const textarea = document.getElementById("summary-text");
+      if (submitButton) submitButton.disabled = true;
+      if (textarea) textarea.disabled = true;
+
+      // Analyse durchführen
+      const result = await analyzeSummary(proposalId, summaryText);
+
+      // Formulareingabe wieder aktivieren
+      if (submitButton) submitButton.disabled = false;
+      if (textarea) textarea.disabled = false;
+
+      console.log("Analyse erfolgreich abgeschlossen");
+    } catch (error) {
+      console.error("Fehler beim Verarbeiten des Formulars:", error);
+
+      // Formulareingabe wieder aktivieren
+      const submitButton = form.querySelector("button[type=submit]");
+      const textarea = document.getElementById("summary-text");
+      if (submitButton) submitButton.disabled = false;
+      if (textarea) textarea.disabled = false;
+    }
+  });
 }

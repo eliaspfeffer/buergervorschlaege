@@ -277,7 +277,7 @@ const mergeProposals = async (req, res) => {
 };
 
 /**
- * Gibt die KI-Analyse eines Vorschlags zurück
+ * Ruft die KI-Analyse für einen bestimmten Vorschlag ab
  * @param {Object} req - Express Request Objekt
  * @param {Object} res - Express Response Objekt
  */
@@ -285,24 +285,31 @@ const getProposalAnalysis = async (req, res) => {
   try {
     const { proposalId } = req.params;
 
-    const analysis = await ProposalAnalysis.findOne({
-      proposal: proposalId,
-    }).populate({
-      path: "similarProposals.proposal",
-      select: "title content status",
-    });
+    // Analyse aus der Datenbank holen
+    const analysis = await ProposalAnalysis.findOne({ proposal: proposalId })
+      .populate({
+        path: "similarProposals.proposal",
+        select: "title content",
+      })
+      .populate({
+        path: "suggestedCategories.category",
+        select: "name description",
+      });
 
     if (!analysis) {
-      return res.status(404).json({
-        message: "Keine Analyse für diesen Vorschlag gefunden",
-      });
+      return res
+        .status(404)
+        .json({ message: "Keine Analyse für diesen Vorschlag gefunden" });
     }
 
-    return res.status(200).json(analysis);
+    return res.status(200).json({
+      message: "Analyse erfolgreich abgerufen",
+      analysis,
+    });
   } catch (error) {
-    console.error("Fehler beim Abrufen der Vorschlagsanalyse:", error);
+    console.error("Fehler beim Abrufen der Analyse:", error);
     return res.status(500).json({
-      message: "Fehler beim Abrufen der Vorschlagsanalyse",
+      message: "Fehler beim Abrufen der Analyse",
       error: error.message,
     });
   }
@@ -626,6 +633,50 @@ const processUnanalyzedProposals = async (req, res) => {
     console.error("Fehler bei der Batch-Verarbeitung von Vorschlägen:", error);
     return res.status(500).json({
       message: "Fehler bei der Batch-Verarbeitung von Vorschlägen",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Entfernt verwaiste Analysen (für die kein Vorschlag mehr existiert)
+ * @param {Object} req - Express Request Objekt
+ * @param {Object} res - Express Response Objekt
+ */
+const pruneOrphanedAnalyses = async (req, res) => {
+  try {
+    // Alle Vorschlag-IDs ermitteln
+    const proposals = await Proposal.find({}, "_id");
+    const proposalIds = proposals.map((p) => p._id.toString());
+
+    // Analysen finden, deren Vorschlag nicht mehr existiert
+    const analyses = await ProposalAnalysis.find({});
+    const orphanedAnalyses = analyses.filter(
+      (analysis) => !proposalIds.includes(analysis.proposal.toString())
+    );
+
+    if (orphanedAnalyses.length === 0) {
+      return res.status(200).json({
+        message: "Keine verwaisten Analysen gefunden",
+        count: 0,
+      });
+    }
+
+    // IDs der zu löschenden Analysen sammeln
+    const orphanedIds = orphanedAnalyses.map((a) => a._id);
+
+    // Verwaiste Analysen löschen
+    await ProposalAnalysis.deleteMany({ _id: { $in: orphanedIds } });
+
+    return res.status(200).json({
+      message: "Verwaiste Analysen erfolgreich entfernt",
+      count: orphanedIds.length,
+      removedIds: orphanedIds,
+    });
+  } catch (error) {
+    console.error("Fehler beim Entfernen verwaister Analysen:", error);
+    return res.status(500).json({
+      message: "Fehler beim Entfernen verwaister Analysen",
       error: error.message,
     });
   }
@@ -1017,13 +1068,109 @@ const autoAnalyzeProposal = async (req, res) => {
   }
 };
 
+/**
+ * Analysiert eine Zusammenfassung eines Vorschlags und speichert die KI-Bewertung in der Datenbank
+ * @param {Object} req - Express Request Objekt
+ * @param {Object} res - Express Response Objekt
+ */
+const analyzeProposalSummary = async (req, res) => {
+  try {
+    const { proposalId } = req.params;
+    const { summary } = req.body;
+
+    if (!summary || typeof summary !== "string") {
+      return res.status(400).json({
+        message: "Eine Zusammenfassung muss als Text übermittelt werden",
+      });
+    }
+
+    // Vorschlag aus der Datenbank holen
+    const proposal = await Proposal.findById(proposalId);
+
+    if (!proposal) {
+      return res.status(404).json({ message: "Vorschlag nicht gefunden" });
+    }
+
+    // Zusammenfassung mit Gemini API analysieren
+    const analysisResult = await geminiService.analyzeSummaryAndSave(
+      summary,
+      proposal
+    );
+
+    // Bestehende Analyse in der Datenbank suchen
+    let analysis = await ProposalAnalysis.findOne({ proposal: proposalId });
+
+    if (analysis) {
+      // Bestehende Analyse aktualisieren
+      analysis = await ProposalAnalysis.findOneAndUpdate(
+        { proposal: proposalId },
+        {
+          aiEvaluation: {
+            ...analysis.aiEvaluation,
+            quality: analysisResult.quality,
+            relevance: analysisResult.relevance,
+            feasibility: analysisResult.feasibility,
+            sustainability: analysisResult.sustainability,
+            innovation: analysisResult.innovation,
+            summary: summary, // Die ursprüngliche Zusammenfassung speichern
+          },
+          lastProcessedAt: new Date(),
+        },
+        { new: true }
+      );
+    } else {
+      // Neue Analyse erstellen
+      analysis = await ProposalAnalysis.create({
+        proposal: proposalId,
+        aiEvaluation: {
+          quality: analysisResult.quality,
+          relevance: analysisResult.relevance,
+          feasibility: analysisResult.feasibility,
+          sustainability: analysisResult.sustainability,
+          innovation: analysisResult.innovation,
+          summary: summary,
+        },
+        isProcessed: true,
+        lastProcessedAt: new Date(),
+      });
+    }
+
+    // AI-Analyse auch im Vorschlag selbst aktualisieren
+    await Proposal.findByIdAndUpdate(proposalId, {
+      aiAnalysis: {
+        ...proposal.aiAnalysis,
+        quality: analysisResult.quality,
+        relevance: analysisResult.relevance,
+        feasibility: analysisResult.feasibility,
+        sustainability: analysisResult.sustainability,
+        innovation: analysisResult.innovation,
+        analysisDate: new Date(),
+      },
+    });
+
+    return res.status(200).json({
+      message: "Zusammenfassung erfolgreich analysiert und bewertet",
+      analysis,
+      aiEvaluation: analysisResult,
+    });
+  } catch (error) {
+    console.error("Fehler bei der Analyse der Zusammenfassung:", error);
+    return res.status(500).json({
+      message: "Fehler bei der Analyse der Zusammenfassung",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   analyzeNewProposal,
   mergeProposals,
-  getProposalAnalysis,
   reevaluateProposal,
-  getTopProposals,
   processUnanalyzedProposals,
+  pruneOrphanedAnalyses,
   autoMergeProposals,
   autoAnalyzeProposal,
+  analyzeProposalSummary,
+  getProposalAnalysis,
+  getTopProposals,
 };
