@@ -3,7 +3,7 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const path = require("path");
 const fs = require("fs");
-require("dotenv").config();
+require("dotenv").config({ path: path.join(__dirname, "../.env") });
 const connectDB = require("./config/database");
 const { Proposal, Category, Ministry, User, Comment } = require("./models");
 

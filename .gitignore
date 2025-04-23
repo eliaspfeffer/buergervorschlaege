@@ -1,13 +1,7 @@
-.env
-/backend/.env
-backend/.env
-backend/node_modules
-backend/.env
-
-
 # venv
 venv/
 .venv/
-
-/backend/.env
 backend/.env
+.env
+/backend/.*
+backend/.*
