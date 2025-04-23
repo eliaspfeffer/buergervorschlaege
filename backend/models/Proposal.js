@@ -29,6 +29,7 @@ const proposalSchema = new mongoose.Schema(
         "answered",
         "completed",
         "rejected",
+        "merged",
       ],
       default: "submitted",
     },
@@ -162,10 +163,57 @@ const proposalSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    isMerged: {
+      type: Boolean,
+      default: false,
+    },
+    mergeSource: {
+      type: Boolean,
+      default: false,
+    },
+    mergedInto: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Proposal",
+    },
+    mergeParents: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Proposal",
+      },
+    ],
+    aiProcessing: {
+      lastProcessed: Date,
+      processingStatus: {
+        type: String,
+        enum: ["pending", "processing", "completed", "failed"],
+        default: "pending",
+      },
+      processingErrors: [String],
+    },
   },
   {
     timestamps: true,
   }
 );
+
+proposalSchema.virtual("aiAnalysis.combinedScore").get(function () {
+  if (
+    this.aiAnalysis &&
+    this.aiAnalysis.quality &&
+    this.aiAnalysis.relevance &&
+    this.aiAnalysis.feasibility
+  ) {
+    return (
+      (this.aiAnalysis.quality +
+        this.aiAnalysis.relevance +
+        this.aiAnalysis.feasibility) /
+      3
+    );
+  }
+  return null;
+});
+
+proposalSchema.index({ "aiProcessing.processingStatus": 1, status: 1 });
+proposalSchema.index({ isMerged: 1, mergeSource: 1 });
 
 module.exports = mongoose.model("Proposal", proposalSchema);

@@ -3,6 +3,7 @@ const Proposal = require("./Proposal");
 const Category = require("./Category");
 const Ministry = require("./Ministry");
 const Comment = require("./Comment");
+const ProposalAnalysis = require("./ProposalAnalysis");
 
 module.exports = {
   User,
@@ -10,4 +11,5 @@ module.exports = {
   Category,
   Ministry,
   Comment,
+  ProposalAnalysis,
 };

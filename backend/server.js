@@ -7,6 +7,9 @@ require("dotenv").config({ path: path.join(__dirname, "../.env") });
 const connectDB = require("./config/database");
 const { Proposal, Category, Ministry, User, Comment } = require("./models");
 
+// Importieren der Routen
+const aiRoutes = require("./routes/aiRoutes");
+
 // Erstellen der Express-App
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -18,6 +21,9 @@ connectDB();
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public")));
+
+// Routen registrieren
+app.use("/api/ai", aiRoutes);
 
 // Temporäre Daten bis zur vollständigen Migration zur MongoDB
 const db = {
