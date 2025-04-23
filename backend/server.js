@@ -315,12 +315,28 @@ const db = {
 // Helper-Funktion zum Initialisieren der MongoDB mit Beispieldaten
 async function initializeDatabase() {
   try {
-    // Prüfe, ob bereits Daten in der Datenbank vorhanden sind
-    const proposalsCount = await Proposal.countDocuments();
-    if (proposalsCount > 0) {
-      console.log("Datenbank bereits initialisiert, überspringe Seed");
+    // Prüfe, ob bereits Daten in einer der Hauptsammlungen vorhanden sind
+    const [proposalsCount, categoriesCount, ministriesCount, usersCount] =
+      await Promise.all([
+        Proposal.countDocuments(),
+        Category.countDocuments(),
+        Ministry.countDocuments(),
+        User.countDocuments(),
+      ]);
+
+    if (
+      proposalsCount > 0 ||
+      categoriesCount > 0 ||
+      ministriesCount > 0 ||
+      usersCount > 0
+    ) {
+      console.log(
+        "Datenbank bereits teilweise initialisiert, überspringe Seed"
+      );
       return;
     }
+
+    console.log("Initialisiere Datenbank mit Beispieldaten...");
 
     // Kategorien erstellen
     const categoryDocs = await Category.insertMany(
@@ -352,13 +368,21 @@ async function initializeDatabase() {
 
     // Benutzer erstellen
     const userDocs = await User.insertMany(
-      db.users.map((user) => ({
-        email: user.email,
-        passwordHash: "temporaryHash123", // In der Produktion würden wir richtige Passwort-Hashes verwenden
-        firstName: user.name.split(" ")[0],
-        lastName: user.name.split(" ")[1] || "",
-        userType: user.role,
-      }))
+      db.users.map((user) => {
+        const nameParts = user.name.split(" ");
+        const firstName = nameParts[0];
+        // Stelle sicher, dass lastName nicht leer ist
+        let lastName =
+          nameParts.length > 1 ? nameParts.slice(1).join(" ") : "Nachname";
+
+        return {
+          email: user.email,
+          passwordHash: "temporaryHash123", // In der Produktion würden wir richtige Passwort-Hashes verwenden
+          firstName,
+          lastName,
+          userType: user.role,
+        };
+      })
     );
 
     // Benutzer-Map erstellen für spätere Referenzierung
@@ -366,12 +390,23 @@ async function initializeDatabase() {
     userDocs.forEach((user) => {
       const userName = `${user.firstName} ${user.lastName}`.trim();
       userMap[userName] = user._id;
+      // Fallback für den ursprünglichen Namen
+      const originalName = db.users.find((u) => u.email === user.email)?.name;
+      if (originalName) {
+        userMap[originalName] = user._id;
+      }
     });
 
     // Vorschläge erstellen
     const proposalPromises = db.proposals.map(async (prop) => {
       const userName = prop.user.name;
       const userId = userMap[userName];
+
+      if (!userId) {
+        console.warn(
+          `Benutzer "${userName}" nicht gefunden, verwende ersten Benutzer als Fallback`
+        );
+      }
 
       // Kategorien für diesen Vorschlag finden
       const categories = [];
@@ -416,7 +451,7 @@ async function initializeDatabase() {
         content: prop.content,
         createdAt: new Date(prop.created_at),
         status: prop.status,
-        user: userId,
+        user: userId || userDocs[0]._id, // Fallback zum ersten Benutzer
         categories,
         ministries,
         votes: prop.votes,
@@ -439,22 +474,39 @@ async function initializeDatabase() {
     });
 
     // Kommentare erstellen
-    const commentPromises = db.comments.map((comment) => {
-      const userName = comment.user.name;
-      const userId = userMap[userName];
-      const proposalId = proposalMap[comment.proposal_id];
+    const commentPromises = db.comments
+      .map((comment) => {
+        const userName = comment.user.name;
+        const userId = userMap[userName];
+        const proposalId = proposalMap[comment.proposal_id];
 
-      return {
-        content: comment.content,
-        createdAt: new Date(comment.created_at),
-        user: userId,
-        proposal: proposalId,
-        isOfficial: comment.official || false,
-      };
-    });
+        if (!userId) {
+          console.warn(
+            `Benutzer "${userName}" für Kommentar nicht gefunden, verwende ersten Benutzer als Fallback`
+          );
+        }
 
-    const commentData = await Promise.all(commentPromises);
-    await Comment.insertMany(commentData);
+        if (!proposalId) {
+          console.warn(
+            `Vorschlag "${comment.proposal_id}" für Kommentar nicht gefunden`
+          );
+          return null;
+        }
+
+        return {
+          content: comment.content,
+          createdAt: new Date(comment.created_at),
+          user: userId || userDocs[0]._id, // Fallback zum ersten Benutzer
+          proposal: proposalId,
+          isOfficial: comment.official || false,
+        };
+      })
+      .filter(Boolean); // Entferne null-Werte
+
+    if (commentPromises.length > 0) {
+      const commentData = await Promise.all(commentPromises);
+      await Comment.insertMany(commentData);
+    }
 
     console.log("Datenbank erfolgreich initialisiert mit Beispieldaten");
   } catch (error) {
