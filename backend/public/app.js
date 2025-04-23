@@ -44,8 +44,8 @@ async function loadRecentProposals() {
     const response = await fetch(`${API_BASE_URL}/proposals?limit=3`);
     const data = await response.json();
 
-    // Anpassen für neue API-Struktur (keine success-Property)
-    const proposals = data;
+    // Anpassen für neue API-Struktur mit Pagination
+    const proposals = data.proposals || data;
 
     if (proposals && Array.isArray(proposals)) {
       const proposalsContainer = document.getElementById("recent-proposals");
@@ -76,8 +76,13 @@ async function loadAllProposals(page = 1, filters = {}) {
     const response = await fetch(url);
     const data = await response.json();
 
-    // Anpassen für neue API-Struktur
-    const proposals = data;
+    // Anpassen für neue API-Struktur mit Pagination
+    const proposals = data.proposals || data;
+    const pagination = data.pagination || {
+      total: proposals.length,
+      page: page,
+      pages: Math.ceil(proposals.length / 10),
+    };
 
     if (proposals && Array.isArray(proposals)) {
       const proposalsContainer = document.getElementById("proposals-list");
@@ -94,8 +99,8 @@ async function loadAllProposals(page = 1, filters = {}) {
           proposalsContainer.appendChild(createProposalCard(proposal, true));
         });
 
-        // Vereinfachte Paginierung ohne Gesamtseiten
-        setupPagination(page, Math.ceil(proposals.length / 10) + 1);
+        // Paginierung mit Gesamtseiten aus API-Antwort
+        setupPagination(pagination.page, pagination.pages);
       }
     }
   } catch (error) {
@@ -559,6 +564,18 @@ function setupSubmitForm() {
       }
 
       try {
+        // Statusanzeige anzeigen
+        const statusDiv = document.createElement("div");
+        statusDiv.className = "alert alert-info mt-3";
+        statusDiv.id = "submission-status";
+        statusDiv.innerHTML =
+          "Ihr Vorschlag wird eingereicht und analysiert...";
+        submitForm.appendChild(statusDiv);
+
+        // Submit-Button deaktivieren
+        const submitButton = submitForm.querySelector('button[type="submit"]');
+        if (submitButton) submitButton.disabled = true;
+
         // Kategorien abrufen, um die richtige Kategorie-ID zu finden
         const categoriesResponse = await fetch(`${API_BASE_URL}/categories`);
         const categories = await categoriesResponse.json();
@@ -569,7 +586,10 @@ function setupSubmitForm() {
         );
 
         if (!selectedCategory) {
-          alert("Die ausgewählte Kategorie konnte nicht gefunden werden.");
+          statusDiv.className = "alert alert-danger mt-3";
+          statusDiv.textContent =
+            "Die ausgewählte Kategorie konnte nicht gefunden werden.";
+          if (submitButton) submitButton.disabled = false;
           return;
         }
 
@@ -596,21 +616,49 @@ function setupSubmitForm() {
           },
         };
 
-        const response = await fetch(`${API_BASE_URL}/proposals`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(proposalData),
-        });
+        // Mit autoAnalyze=true URL-Parameter für sofortige Analyse
+        const response = await fetch(
+          `${API_BASE_URL}/proposals?autoAnalyze=true`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(proposalData),
+          }
+        );
 
         // Prüfe den HTTP-Status
         if (response.ok) {
-          const newProposal = await response.json();
-          alert("Ihr Vorschlag wurde erfolgreich eingereicht!");
+          const responseData = await response.json();
 
-          // Navigiere zur Detailseite mit der richtigen ID
-          window.location.href = "proposal-detail.html?id=" + newProposal._id;
+          // Wenn der Vorschlag automatisch zusammengeführt wurde
+          if (responseData.mergedProposal) {
+            statusDiv.className = "alert alert-success mt-3";
+            statusDiv.innerHTML = `
+              <h5>Ihr Vorschlag wurde mit ähnlichen Vorschlägen zusammengeführt!</h5>
+              <p>Wir haben festgestellt, dass Ihr Vorschlag ähnlich zu bereits existierenden Vorschlägen ist.</p>
+              <p>Ein neuer, zusammengeführter Vorschlag wurde erstellt, der die wichtigsten Aspekte aller Vorschläge enthält.</p>
+              <p>Sie werden in 5 Sekunden weitergeleitet...</p>
+            `;
+
+            // Nach 5 Sekunden zur Detailseite des zusammengeführten Vorschlags weiterleiten
+            setTimeout(() => {
+              window.location.href =
+                "proposal-detail.html?id=" + responseData.mergedProposal._id;
+            }, 5000);
+          } else {
+            // Normaler Erfolgsfall ohne Zusammenführung
+            statusDiv.className = "alert alert-success mt-3";
+            statusDiv.textContent =
+              "Ihr Vorschlag wurde erfolgreich eingereicht!";
+
+            // Nach 2 Sekunden zur Detailseite weiterleiten
+            setTimeout(() => {
+              window.location.href =
+                "proposal-detail.html?id=" + responseData._id;
+            }, 2000);
+          }
         } else {
           // Fehlerfall
           const errorData = await response.json();
@@ -625,13 +673,23 @@ function setupSubmitForm() {
                 : JSON.stringify(errorData.error);
           }
 
-          alert("Fehler beim Einreichen des Vorschlags: " + errorMessage);
+          statusDiv.className = "alert alert-danger mt-3";
+          statusDiv.textContent =
+            "Fehler beim Einreichen des Vorschlags: " + errorMessage;
+          if (submitButton) submitButton.disabled = false;
         }
       } catch (error) {
         console.error("Fehler beim Einreichen des Vorschlags:", error);
-        alert(
-          "Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut."
-        );
+        const statusDiv = document.getElementById("submission-status");
+        if (statusDiv) {
+          statusDiv.className = "alert alert-danger mt-3";
+          statusDiv.textContent =
+            "Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.";
+        }
+
+        // Submit-Button wieder aktivieren
+        const submitButton = submitForm.querySelector('button[type="submit"]');
+        if (submitButton) submitButton.disabled = false;
       }
     });
   }

@@ -226,8 +226,9 @@ const mergeProposals = async (req, res) => {
       user: sourceProposal.user, // Der ursprüngliche Autor wird beibehalten
       categories: sourceProposal.categories, // Kategorien vom Ursprungsvorschlag übernehmen (kann später angepasst werden)
       ministries: sourceProposal.ministries, // Ministerien vom Ursprungsvorschlag übernehmen (kann später angepasst werden)
-      isMerged: true, // Markieren als zusammengeführter Vorschlag
+      isMerged: false, // Ist das Ergebnis einer Zusammenführung, aber selbst nicht zusammengeführt
       mergeSource: false, // Ist nicht die Quelle einer Zusammenführung
+      mergeParents: [sourceProposalId, ...targetProposalIds], // Speichert die Quell-IDs
     });
 
     const savedMergedProposal = await mergedProposal.save();
@@ -235,7 +236,7 @@ const mergeProposals = async (req, res) => {
     // Analyse für den neuen zusammengeführten Vorschlag erstellen
     const mergedAnalysis = new ProposalAnalysis({
       proposal: savedMergedProposal._id,
-      isMerged: true,
+      isMerged: false,
       mergeSource: false,
       mergeRationale: mergeResult.mergeRationale,
       isProcessed: true,
@@ -244,26 +245,20 @@ const mergeProposals = async (req, res) => {
 
     await mergedAnalysis.save();
 
-    // Quell- und Ziel-Vorschläge als Quellen einer Zusammenführung markieren
-    await Proposal.updateMany(
-      { _id: { $in: [sourceProposalId, ...targetProposalIds] } },
-      {
-        isMerged: true,
-        mergeSource: true,
-        mergedInto: savedMergedProposal._id,
-        status: "merged",
-      }
+    // IDs der zusammengeführten Vorschläge
+    const sourceIds = [sourceProposalId, ...targetProposalIds];
+
+    // Aktualisiere Kommentare auf den neuen zusammengeführten Vorschlag
+    await Comment.updateMany(
+      { proposal: { $in: sourceIds } },
+      { proposal: savedMergedProposal._id }
     );
 
-    // ProposalAnalysis-Einträge aktualisieren
-    await ProposalAnalysis.updateMany(
-      { proposal: { $in: [sourceProposalId, ...targetProposalIds] } },
-      {
-        isMerged: true,
-        mergeSource: true,
-        mergedInto: savedMergedProposal._id,
-      }
-    );
+    // Lösche die alten Vorschläge und deren Analysen
+    await Promise.all([
+      Proposal.deleteMany({ _id: { $in: sourceIds } }),
+      ProposalAnalysis.deleteMany({ proposal: { $in: sourceIds } }),
+    ]);
 
     return res.status(201).json({
       message: "Vorschläge erfolgreich zusammengeführt",
@@ -802,11 +797,28 @@ const autoAnalyzeProposal = async (req, res) => {
       .sort({ createdAt: -1 }) // Neueste zuerst
       .limit(15); // Beschränkung für Performanz
 
+    console.log("Vorschlag wird analysiert:", proposal.title);
+    console.log(
+      "Anzahl bestehender Vorschläge zum Vergleich:",
+      existingProposals.length
+    );
+
     // Gemini API zur Analyse der Ähnlichkeit nutzen
     const similarityAnalysis = await geminiService.analyzeProposalSimilarity(
       proposal,
       existingProposals
     );
+
+    console.log("Ähnlichkeitsanalyse abgeschlossen:");
+    console.log("- Ist ähnlich:", similarityAnalysis.isSimilar);
+    console.log("- Empfehlung:", similarityAnalysis.recommendation);
+    console.log(
+      "- Anzahl ähnlicher Vorschläge:",
+      similarityAnalysis.similarProposals?.length || 0
+    );
+
+    // Niedrigerer Schwellenwert für die Erkennung ähnlicher Vorschläge (von 0.7 auf 0.6)
+    const SIMILARITY_THRESHOLD = 0.6;
 
     // Prüfen, ob der Vorschlag mit anderen zusammengeführt werden sollte
     if (
@@ -814,16 +826,27 @@ const autoAnalyzeProposal = async (req, res) => {
       similarityAnalysis.similarProposals &&
       similarityAnalysis.similarProposals.length > 0
     ) {
-      // Ahnliche Vorschläge mit hoher Ähnlichkeit sammeln (Schwellenwert 0.7)
+      // Ähnliche Vorschläge mit hoher Ähnlichkeit sammeln (niedrigerer Schwellenwert für bessere Erkennung)
       const similarProposalIds = similarityAnalysis.similarProposals
-        .filter((p) => p.similarityScore >= 0.7)
+        .filter((p) => p.similarityScore >= SIMILARITY_THRESHOLD)
         .map((p) => p.id);
+
+      console.log(
+        `Gefundene ähnliche Vorschläge (Score >= ${SIMILARITY_THRESHOLD}):`,
+        similarProposalIds.length
+      );
 
       if (similarProposalIds.length > 0) {
         // Ähnliche Vorschläge holen
         const targetProposals = await Proposal.find({
           _id: { $in: similarProposalIds },
         });
+
+        console.log(
+          "Beginne Zusammenführung von",
+          targetProposals.length + 1,
+          "Vorschlägen"
+        );
 
         // Gemini API zum Zusammenführen der Vorschläge nutzen
         const mergeResult = await geminiService.mergeProposals(
@@ -839,8 +862,8 @@ const autoAnalyzeProposal = async (req, res) => {
           user: proposal.user, // Der ursprüngliche Autor wird beibehalten
           categories: proposal.categories, // Kategorien vom Ursprungsvorschlag übernehmen
           ministries: proposal.ministries, // Ministerien vom Ursprungsvorschlag übernehmen
-          isMerged: true, // Markieren als zusammengeführter Vorschlag
-          mergeSource: false, // Ist nicht die Quelle einer Zusammenführung
+          isMerged: false, // Dieser Vorschlag ist das Endergebnis einer Zusammenführung
+          mergeSource: false,
           mergeParents: [proposalId, ...similarProposalIds], // Speichert die Quell-IDs
         });
 
@@ -849,7 +872,7 @@ const autoAnalyzeProposal = async (req, res) => {
         // Analyse für den neuen zusammengeführten Vorschlag erstellen
         const mergedAnalysis = new ProposalAnalysis({
           proposal: savedMergedProposal._id,
-          isMerged: true,
+          isMerged: false,
           mergeSource: false,
           mergeRationale: mergeResult.mergeRationale,
           isProcessed: true,
@@ -858,25 +881,24 @@ const autoAnalyzeProposal = async (req, res) => {
 
         await mergedAnalysis.save();
 
-        // Quell- und Ziel-Vorschläge als Quellen einer Zusammenführung markieren
-        await Proposal.updateMany(
-          { _id: { $in: [proposalId, ...similarProposalIds] } },
-          {
-            isMerged: true,
-            mergeSource: true,
-            mergedInto: savedMergedProposal._id,
-            status: "merged",
-          }
+        // IDs der zusammengeführten Vorschläge
+        const sourceIds = [proposalId, ...similarProposalIds];
+
+        // Aktualisiere Kommentare auf den neuen zusammengeführten Vorschlag
+        await Comment.updateMany(
+          { proposal: { $in: sourceIds } },
+          { proposal: savedMergedProposal._id }
         );
 
-        // ProposalAnalysis-Einträge aktualisieren
-        await ProposalAnalysis.updateMany(
-          { proposal: { $in: [proposalId, ...similarProposalIds] } },
-          {
-            isMerged: true,
-            mergeSource: true,
-            mergedInto: savedMergedProposal._id,
-          }
+        // Lösche die alten Vorschläge und deren Analysen
+        await Promise.all([
+          Proposal.deleteMany({ _id: { $in: sourceIds } }),
+          ProposalAnalysis.deleteMany({ proposal: { $in: sourceIds } }),
+        ]);
+
+        console.log(
+          "Zusammenführung abgeschlossen. Neuer Vorschlag erstellt:",
+          savedMergedProposal._id
         );
 
         return res.status(201).json({

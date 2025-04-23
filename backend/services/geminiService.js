@@ -17,7 +17,7 @@ if (!apiKey) {
 
 // Gemini API initialisieren
 const genAI = new GoogleGenerativeAI(apiKey);
-const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
 /**
  * Analysiert einen Vorschlag auf Ähnlichkeiten mit vorhandenen Vorschlägen
@@ -28,47 +28,71 @@ const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 async function analyzeProposalSimilarity(newProposal, existingProposals) {
   try {
     const prompt = `
-Analysiere den folgenden neuen Bürgervorschlag und vergleiche ihn mit existierenden Vorschlägen.
-Identifiziere Ähnlichkeiten und entscheide, ob der neue Vorschlag:
-1. Einzigartig ist und als eigener Eintrag gespeichert werden sollte
-2. Sehr ähnlich zu einem oder mehreren existierenden Vorschlägen ist und zusammengeführt werden sollte
-3. Redundant ist und verworfen werden sollte
+# Aufgabe: Analyse der Ähnlichkeit zwischen Bürgervorschlägen
 
-Neuer Vorschlag:
-Titel: ${newProposal.title}
-Inhalt: ${newProposal.content}
-Kategorie: ${
+## Kontext
+Du bist ein KI-Assistent für eine Bürgervorschlagsplattform. Deine Aufgabe ist es, zu analysieren, ob ein neuer Vorschlag ähnlich zu bereits existierenden Vorschlägen ist und ob eine Zusammenführung sinnvoll wäre.
+
+## Richtlinien zur Ähnlichkeitsanalyse
+1. **Inhaltliche Ähnlichkeit**: Fokussiere hauptsächlich auf die inhaltliche Ähnlichkeit der Vorschläge, nicht nur auf Ähnlichkeiten im Titel.
+2. **Themenbereiche**: Prüfe, ob die Vorschläge den gleichen Themenbereich behandeln.
+3. **Lösungsansätze**: Achte darauf, ob ähnliche Lösungsansätze oder Ideen vorgeschlagen werden.
+4. **Ziele**: Berücksichtige, ob die Vorschläge ähnliche Ziele verfolgen, selbst wenn die konkreten Maßnahmen unterschiedlich sind.
+5. **Semantische Ähnlichkeit**: Achte auf semantische Ähnlichkeiten, auch wenn unterschiedliche Formulierungen verwendet werden.
+
+## Schwellenwerte für Ähnlichkeit
+- **Hohe Ähnlichkeit (Score ≥ 0.7)**: Die Vorschläge behandeln das gleiche Thema mit ähnlichen Lösungsansätzen.
+- **Mittlere Ähnlichkeit (Score 0.5-0.7)**: Die Vorschläge behandeln ähnliche Themen oder könnten sich ergänzen.
+- **Geringe Ähnlichkeit (Score < 0.5)**: Die Vorschläge haben nur oberflächliche Ähnlichkeiten.
+
+## Zu analysierender neuer Vorschlag
+**Titel:** ${newProposal.title}
+**Inhalt:** ${newProposal.content}
+**Kategorie:** ${
       newProposal.categories
         ?.map((c) => c.category?.name)
         .filter(Boolean)
         .join(", ") || "Keine Kategorie"
     }
 
-Existierende Vorschläge:
+## Existierende Vorschläge zum Vergleich
 ${existingProposals
   .map(
     (p, i) => `
-${i + 1}. Titel: ${p.title}
-   Inhalt: ${p.content}
-   ID: ${p._id}
-   Kategorie: ${
-     p.categories
-       ?.map((c) => c.category?.name)
-       .filter(Boolean)
-       .join(", ") || "Keine Kategorie"
-   }
+### Vorschlag ${i + 1}
+**ID:** ${p._id}
+**Titel:** ${p.title}
+**Inhalt:** ${p.content}
+**Kategorie:** ${
+      p.categories
+        ?.map((c) => c.category?.name)
+        .filter(Boolean)
+        .join(", ") || "Keine Kategorie"
+    }
 `
   )
   .join("\n")}
 
-Gib deine Antwort im folgenden JSON-Format zurück:
+## Gewünschtes Ausgabeformat (JSON)
+Bitte gib deine Antwort ausschließlich im folgenden JSON-Format zurück:
+
+\`\`\`json
 {
   "isSimilar": true/false,
-  "similarProposals": [{"id": "proposal_id", "similarityScore": 0.85, "reason": "Grund für Ähnlichkeit"}],
+  "similarProposals": [
+    {"id": "proposal_id", "similarityScore": 0.85, "reason": "Detaillierte Begründung für die Ähnlichkeit"}
+  ],
   "recommendation": "unique"/"merge"/"discard",
-  "mergeStrategy": "Der neue Vorschlag sollte mit Vorschlag X zusammengeführt werden, indem...",
+  "mergeStrategy": "Beschreibung, wie die Vorschläge zusammengeführt werden sollten",
   "summary": "Zusammenfassung der Analyse"
 }
+\`\`\`
+
+## Wichtige Hinweise
+- Sei großzügig bei der Erkennung von Ähnlichkeiten - im Zweifelsfall ist eine Zusammenführung besser als doppelte Vorschläge
+- Die similarityScore sollte zwischen 0 und 1 liegen, wobei 1 für identische Vorschläge steht
+- Gib eine klare Empfehlung ab: "unique" (einzigartig), "merge" (zusammenführen) oder "discard" (verwerfen)
+- Wenn mehrere Vorschläge ähnlich sind, liste alle mit ihren jeweiligen Ähnlichkeitswerten auf
 `;
 
     const result = await model.generateContent(prompt);
@@ -119,18 +143,21 @@ async function mergeProposals(newProposal, similarProposals) {
     ];
 
     const prompt = `
-# Aufgabe: Zusammenführung von Bürgervorschlägen
+# Aufgabe: Intelligente Zusammenführung von Bürgervorschlägen
 
 ## Kontext
-Du erhältst mehrere Bürgervorschläge zu einem ähnlichen Thema oder Problem. Deine Aufgabe ist es, diese in einen umfassenden, gut strukturierten Vorschlag zusammenzuführen.
+Es wurden mehrere ähnliche Bürgervorschläge identifiziert, die dasselbe oder ein sehr ähnliches Thema behandeln. Deine Aufgabe ist es, diese Vorschläge zu einem einzigen, umfassenden und gut strukturierten Vorschlag zusammenzuführen.
 
 ## Richtlinien für die Zusammenführung
-1. **Bewahre wichtige Details**: Alle wesentlichen Informationen, Begründungen und Perspektiven aus den einzelnen Vorschlägen sollten erhalten bleiben.
-2. **Vermeiden von Wiederholungen**: Redundante Informationen sollten zusammengeführt werden.
-3. **Strukturierung**: Der zusammengeführte Vorschlag sollte logisch aufgebaut sein mit einer klaren Einleitung, Hauptteil und Schlussfolgerung.
-4. **Neutralität**: Keine Wertung zwischen den verschiedenen Perspektiven, alle wichtigen Standpunkte gleichberechtigt darstellen.
-5. **Präzision**: Der zusammengeführte Vorschlag sollte präzise und verständlich sein.
-6. **Vollständigkeit**: Keine wichtigen Aspekte oder Argumente aus den Originalvorschlägen dürfen verloren gehen.
+1. **Vollständigkeit**: Stelle sicher, dass keine wichtigen Informationen, Argumente oder Perspektiven aus den Originalvorschlägen verloren gehen.
+2. **Eliminierung von Redundanzen**: Entferne Wiederholungen und fasse ähnliche Punkte zusammen.
+3. **Strukturierte Darstellung**: Der zusammengeführte Vorschlag sollte klar strukturiert sein mit:
+   - Einer prägnanten Einleitung, die das Problem/Anliegen beschreibt
+   - Einem Hauptteil mit den konkreten Vorschlägen und Begründungen
+   - Einer klaren Zusammenfassung oder Schlussfolgerung
+4. **Ausgewogenheit**: Berücksichtige alle wichtigen Perspektiven aus den Originalvorschlägen.
+5. **Präzision und Klarheit**: Der Text sollte präzise, verständlich und für die Öffentlichkeit zugänglich sein.
+6. **Kreativität**: Verbessere die Vorschläge, indem du die besten Elemente aller Vorschläge kombinierst und mögliche Lücken schließt.
 
 ## Zu kombinierende Vorschläge
 ${proposalsData
@@ -144,25 +171,26 @@ ${p.content}
   )
   .join("\n")}
 
-## Erwartetes Ausgabeformat
-Bitte gib deine Antwort in folgendem JSON-Format zurück:
+## Gewünschtes Ausgabeformat (JSON)
+Bitte gib deine Antwort im folgenden JSON-Format zurück:
 
 \`\`\`json
 {
   "title": "Ein prägnanter, klarer Titel, der den Kern des zusammengeführten Vorschlags erfasst",
-  "content": "Der vollständige Inhalt des zusammengeführten Vorschlags, der alle wichtigen Aspekte der Originalvorschläge enthält. Der Text sollte gut strukturiert, klar und präzise sein.",
-  "mergeRationale": "Eine Erklärung deiner Zusammenführungsstrategie: Welche wichtigen Elemente du aus jedem Vorschlag übernommen hast, wie du sie integriert hast und warum du bestimmte Entscheidungen getroffen hast."
+  "content": "Der vollständige, gut strukturierte Inhalt des zusammengeführten Vorschlags",
+  "mergeRationale": "Eine Erklärung deiner Zusammenführungsstrategie: Welche wichtigen Elemente du aus jedem Vorschlag übernommen hast, wie du sie integriert hast und warum."
 }
 \`\`\`
 
-## Wichtige Hinweise
-- Der zusammengeführte Inhalt sollte mindestens so detailliert sein wie der umfangreichste der Originalvorschläge.
-- Stelle sicher, dass keine wichtigen Fakten, Argumente oder Perspektiven verloren gehen.
-- Der Titel sollte das zentrale Anliegen des Vorschlags klar zum Ausdruck bringen.
+## Hinweise zur Qualität
+- Der Titel sollte prägnant und aussagekräftig sein, idealerweise nicht länger als 10-12 Wörter
+- Der Inhalt sollte mindestens so detailliert sein wie der umfangreichste Originalvorschlag
+- Vermeide Füllwörter und konzentriere dich auf konkrete Vorschläge und Begründungen
+- Achte auf einen sachlichen, konstruktiven Ton
 `;
 
     // Model-Wahl optimieren
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
     const result = await model.generateContent(prompt);
     const response = result.response;

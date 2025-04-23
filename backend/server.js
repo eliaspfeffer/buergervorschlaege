@@ -525,13 +525,59 @@ async function initializeDatabase() {
 // Holen aller Vorschläge
 app.get("/api/proposals", async (req, res) => {
   try {
-    const proposals = await Proposal.find()
+    // Parameter für Paginierung und Filterung
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Filter erstellen
+    const filter = {
+      // Vorschläge ausschließen, die bereits zusammengeführt wurden
+      status: { $ne: "merged" },
+      mergeSource: { $ne: true },
+    };
+
+    // Zusätzliche Filter hinzufügen
+    if (req.query.category) {
+      filter["categories.category"] = req.query.category;
+    }
+
+    if (req.query.status) {
+      filter.status = req.query.status;
+    }
+
+    if (req.query.ministry) {
+      filter["ministries.ministry"] = req.query.ministry;
+    }
+
+    if (req.query.search) {
+      filter.$or = [
+        { title: { $regex: req.query.search, $options: "i" } },
+        { content: { $regex: req.query.search, $options: "i" } },
+      ];
+    }
+
+    // Vorschläge abfragen mit Paginierung
+    const proposals = await Proposal.find(filter)
       .populate("user", "firstName lastName")
       .populate("categories.category", "name")
       .populate("ministries.ministry", "name")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
-    res.json(proposals);
+    // Gesamtzahl der Vorschläge für Pagination ermitteln
+    const total = await Proposal.countDocuments(filter);
+
+    res.json({
+      proposals,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     res.status(500).json({
       message: "Fehler beim Abrufen der Vorschläge",
@@ -570,40 +616,66 @@ app.post("/api/proposals", async (req, res) => {
 
     // Optional automatische Analyse und Zusammenführung starten
     if (req.query.autoAnalyze === "true") {
-      // Hier rufen wir den Auto-Analyze-Endpunkt auf
-      // Anstatt direkt die Antwort zurückzugeben, fügen wir eine Information hinzu,
-      // dass die Analyse im Hintergrund läuft
+      try {
+        // Direkt die Controller-Funktion aufrufen (synchron)
+        const aiController = require("./controllers/aiController");
 
-      // Starte den Analyseprozess im Hintergrund
-      process.nextTick(async () => {
-        try {
-          // Hier würden wir normalerweise einen HTTP-Request machen,
-          // aber da wir im selben Prozess sind, können wir die Controller-Funktion direkt aufrufen
-          const aiController = require("./controllers/aiController");
-          await aiController.autoAnalyzeProposal(
-            {
-              params: { proposalId: savedProposal._id.toString() },
+        // Eigenes Request/Response-Objekt erstellen, um die Ergebnisse abzufangen
+        const fakeReq = {
+          params: { proposalId: savedProposal._id.toString() },
+        };
+
+        // Ergebnisse der Analyse abfangen
+        let analysisResult = null;
+        const fakeRes = {
+          status: (code) => ({
+            json: (data) => {
+              analysisResult = { code, data };
+              return fakeRes;
             },
-            {
-              status: () => ({ json: () => {} }), // Mock response object
-            }
-          );
-        } catch (error) {
-          console.error(
-            "Fehler bei der automatischen Hintergrundanalyse:",
-            error
-          );
-        }
-      });
+          }),
+        };
 
-      return res.status(201).json({
-        ...savedProposal.toObject(),
-        message:
-          "Vorschlag erstellt. Automatische Analyse und ggf. Zusammenführung läuft im Hintergrund.",
-        analysisStatus: "pending",
-      });
+        // Analyse synchron ausführen
+        await aiController.autoAnalyzeProposal(fakeReq, fakeRes);
+
+        // Ergebnisse zurückgeben
+        if (analysisResult) {
+          // Wenn ein zusammengeführter Vorschlag erstellt wurde
+          if (
+            analysisResult.code === 201 &&
+            analysisResult.data.mergedProposal
+          ) {
+            return res.status(201).json({
+              ...savedProposal.toObject(),
+              message:
+                "Vorschlag wurde mit ähnlichen Vorschlägen zusammengeführt",
+              mergedProposal: analysisResult.data.mergedProposal,
+              mergeRationale: analysisResult.data.mergeRationale,
+            });
+          }
+          // Wenn der Vorschlag analysiert wurde, aber nicht zusammengeführt
+          else if (analysisResult.code === 200) {
+            return res.status(201).json({
+              ...savedProposal.toObject(),
+              message: "Vorschlag wurde erstellt und analysiert",
+              analysis: analysisResult.data.analysis,
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Fehler bei der automatischen Analyse:", error);
+        // Bei Fehler trotzdem den Vorschlag zurückgeben, mit Fehlermeldung
+        return res.status(201).json({
+          ...savedProposal.toObject(),
+          message:
+            "Vorschlag wurde erstellt, aber es gab einen Fehler bei der Analyse",
+          analysisError: error.message,
+        });
+      }
     }
 
+    // Standardfall, wenn keine Analyse angefordert oder durchgeführt wurde
     res.status(201).json(savedProposal);
   } catch (error) {
     res.status(400).json({
