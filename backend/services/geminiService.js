@@ -106,35 +106,63 @@ Gib deine Antwort im folgenden JSON-Format zurück:
 async function mergeProposals(newProposal, similarProposals) {
   try {
     const proposalsData = [
-      { title: newProposal.title, content: newProposal.content },
-      ...similarProposals.map((p) => ({ title: p.title, content: p.content })),
+      {
+        title: newProposal.title,
+        content: newProposal.content,
+        id: newProposal._id,
+      },
+      ...similarProposals.map((p) => ({
+        title: p.title,
+        content: p.content,
+        id: p._id,
+      })),
     ];
 
     const prompt = `
-Führe die folgenden Bürgervorschläge zu einem einzigen, umfassenden Vorschlag zusammen.
-Der zusammengeführte Vorschlag sollte:
-1. Die wesentlichen Punkte aller Vorschläge enthalten
-2. Redundanzen vermeiden
-3. Klar strukturiert und verständlich sein
-4. Einen prägnanten Titel haben
+# Aufgabe: Zusammenführung von Bürgervorschlägen
 
-Vorschläge zur Zusammenführung:
+## Kontext
+Du erhältst mehrere Bürgervorschläge zu einem ähnlichen Thema oder Problem. Deine Aufgabe ist es, diese in einen umfassenden, gut strukturierten Vorschlag zusammenzuführen.
+
+## Richtlinien für die Zusammenführung
+1. **Bewahre wichtige Details**: Alle wesentlichen Informationen, Begründungen und Perspektiven aus den einzelnen Vorschlägen sollten erhalten bleiben.
+2. **Vermeiden von Wiederholungen**: Redundante Informationen sollten zusammengeführt werden.
+3. **Strukturierung**: Der zusammengeführte Vorschlag sollte logisch aufgebaut sein mit einer klaren Einleitung, Hauptteil und Schlussfolgerung.
+4. **Neutralität**: Keine Wertung zwischen den verschiedenen Perspektiven, alle wichtigen Standpunkte gleichberechtigt darstellen.
+5. **Präzision**: Der zusammengeführte Vorschlag sollte präzise und verständlich sein.
+6. **Vollständigkeit**: Keine wichtigen Aspekte oder Argumente aus den Originalvorschlägen dürfen verloren gehen.
+
+## Zu kombinierende Vorschläge
 ${proposalsData
   .map(
     (p, i) => `
-${i + 1}. Titel: ${p.title}
-   Inhalt: ${p.content}
+### Vorschlag ${i + 1} (ID: ${p.id})
+**Titel:** ${p.title}
+**Inhalt:**
+${p.content}
 `
   )
   .join("\n")}
 
-Gib deine Antwort im folgenden JSON-Format zurück:
+## Erwartetes Ausgabeformat
+Bitte gib deine Antwort in folgendem JSON-Format zurück:
+
+\`\`\`json
 {
-  "title": "Neuer zusammengeführter Titel",
-  "content": "Ausführlicher zusammengeführter Inhalt",
-  "mergeRationale": "Erklärung, wie und warum die Vorschläge zusammengeführt wurden"
+  "title": "Ein prägnanter, klarer Titel, der den Kern des zusammengeführten Vorschlags erfasst",
+  "content": "Der vollständige Inhalt des zusammengeführten Vorschlags, der alle wichtigen Aspekte der Originalvorschläge enthält. Der Text sollte gut strukturiert, klar und präzise sein.",
+  "mergeRationale": "Eine Erklärung deiner Zusammenführungsstrategie: Welche wichtigen Elemente du aus jedem Vorschlag übernommen hast, wie du sie integriert hast und warum du bestimmte Entscheidungen getroffen hast."
 }
+\`\`\`
+
+## Wichtige Hinweise
+- Der zusammengeführte Inhalt sollte mindestens so detailliert sein wie der umfangreichste der Originalvorschläge.
+- Stelle sicher, dass keine wichtigen Fakten, Argumente oder Perspektiven verloren gehen.
+- Der Titel sollte das zentrale Anliegen des Vorschlags klar zum Ausdruck bringen.
 `;
+
+    // Model-Wahl optimieren
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     const result = await model.generateContent(prompt);
     const response = result.response;

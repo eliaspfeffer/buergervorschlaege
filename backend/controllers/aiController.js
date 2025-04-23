@@ -1,4 +1,4 @@
-const { Proposal, Category, ProposalAnalysis } = require("../models");
+const { Proposal, Category, ProposalAnalysis, Comment } = require("../models");
 const geminiService = require("../services/geminiService");
 
 /**
@@ -636,7 +636,7 @@ const processUnanalyzedProposals = async (req, res) => {
   }
 };
 
-// Automatische Zusammenführung von Vorschlägen basierend auf KI-Empfehlungen
+// Automatische Zusammenführung von ähnlichen Vorschlägen
 const autoMergeProposals = async (req, res) => {
   try {
     // Analysen finden, die eine Zusammenführung empfehlen
@@ -656,6 +656,7 @@ const autoMergeProposals = async (req, res) => {
     }
 
     const mergeResults = [];
+    const deletedProposalIds = [];
 
     // Jeden Kandidaten verarbeiten
     for (const candidate of mergeCandidates) {
@@ -666,7 +667,7 @@ const autoMergeProposals = async (req, res) => {
           .map((p) => p.proposal);
 
         if (highSimilarityProposals.length === 0) {
-          continue; // Keine ähnlichen Vorschläge mit hoher Ähnlichkeit
+          continue;
         }
 
         // Gemini API zum Zusammenführen der Vorschläge nutzen
@@ -680,26 +681,18 @@ const autoMergeProposals = async (req, res) => {
           title: mergeResult.title,
           content: mergeResult.content,
           status: "submitted",
-          user: candidate.proposal.user, // Der ursprüngliche Autor wird beibehalten
-          categories: candidate.proposal.categories, // Kategorien vom Ursprungsvorschlag
-          ministries: candidate.proposal.ministries, // Ministerien vom Ursprungsvorschlag
-          isMerged: true, // Markieren als zusammengeführter Vorschlag
-          mergeSource: false, // Ist nicht die Quelle einer Zusammenführung
+          user: candidate.proposal.user,
+          categories: candidate.proposal.categories,
+          ministries: candidate.proposal.ministries,
+          isMerged: false, // Dieser Vorschlag ist das Endergebnis, also nicht als merged markieren
+          mergeSource: false,
+          mergeParents: [
+            candidate.proposal._id,
+            ...highSimilarityProposals.map((p) => p._id),
+          ],
         });
 
         const savedMergedProposal = await mergedProposal.save();
-
-        // Analyse für den neuen zusammengeführten Vorschlag erstellen
-        const mergedAnalysis = new ProposalAnalysis({
-          proposal: savedMergedProposal._id,
-          isMerged: true,
-          mergeSource: false,
-          mergeRationale: mergeResult.mergeRationale,
-          isProcessed: true,
-          lastProcessedAt: new Date(),
-        });
-
-        await mergedAnalysis.save();
 
         // IDs der zusammengeführten Vorschläge
         const sourceIds = [
@@ -707,32 +700,46 @@ const autoMergeProposals = async (req, res) => {
           ...highSimilarityProposals.map((p) => p._id),
         ];
 
-        // Quell-Vorschläge als Quellen einer Zusammenführung markieren
-        await Proposal.updateMany(
-          { _id: { $in: sourceIds } },
-          {
-            isMerged: true,
-            mergeSource: true,
-            mergedInto: savedMergedProposal._id,
-            status: "merged",
-          }
-        );
+        // Alte Vorschläge und deren Analysen löschen
+        await Promise.all([
+          Proposal.deleteMany({ _id: { $in: sourceIds } }),
+          ProposalAnalysis.deleteMany({ proposal: { $in: sourceIds } }),
+          Comment.updateMany(
+            { proposal: { $in: sourceIds } },
+            { proposal: savedMergedProposal._id }
+          ),
+        ]);
 
-        // ProposalAnalysis-Einträge aktualisieren
-        await ProposalAnalysis.updateMany(
-          { proposal: { $in: sourceIds } },
-          {
-            isMerged: true,
-            mergeSource: true,
-            mergedInto: savedMergedProposal._id,
-          }
-        );
+        // Speichere die gelöschten IDs
+        deletedProposalIds.push(...sourceIds);
 
         mergeResults.push({
           success: true,
           sourceProposals: sourceIds,
           mergedProposalId: savedMergedProposal._id,
           title: mergedProposal.title,
+        });
+
+        // Erstelle eine neue Analyse für den zusammengeführten Vorschlag
+        const evaluation = await geminiService.evaluateProposal(
+          savedMergedProposal
+        );
+
+        await ProposalAnalysis.create({
+          proposal: savedMergedProposal._id,
+          isMerged: false,
+          mergeSource: false,
+          mergeRationale: mergeResult.mergeRationale,
+          aiEvaluation: {
+            quality: evaluation.quality,
+            relevance: evaluation.relevance,
+            feasibility: evaluation.feasibility,
+            strengths: evaluation.strengths,
+            weaknesses: evaluation.weaknesses,
+            summary: evaluation.summary,
+          },
+          isProcessed: true,
+          lastProcessedAt: new Date(),
         });
       } catch (error) {
         console.error(
@@ -751,14 +758,238 @@ const autoMergeProposals = async (req, res) => {
     const successfulMerges = mergeResults.filter((r) => r.success);
 
     return res.status(200).json({
-      message: "Automatische Zusammenführung abgeschlossen",
+      message: "Automatische Zusammenführung und Bereinigung abgeschlossen",
       mergeCount: successfulMerges.length,
+      deletedCount: deletedProposalIds.length,
       mergeResults,
+      deletedProposalIds,
     });
   } catch (error) {
     console.error("Fehler bei der automatischen Zusammenführung:", error);
     return res.status(500).json({
       message: "Fehler bei der automatischen Zusammenführung",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Analysiert und führt automatisch einen neuen Vorschlag zusammen, wenn ähnliche Vorschläge gefunden werden
+ * @param {Object} req - Express Request Objekt
+ * @param {Object} res - Express Response Objekt
+ */
+const autoAnalyzeProposal = async (req, res) => {
+  try {
+    const { proposalId } = req.params;
+
+    // Vorschlag aus der Datenbank holen
+    const proposal = await Proposal.findById(proposalId)
+      .populate("categories.category", "name")
+      .populate("ministries.ministry", "name");
+
+    if (!proposal) {
+      return res.status(404).json({ message: "Vorschlag nicht gefunden" });
+    }
+
+    // Bestehende Vorschläge zum Vergleich aus der Datenbank holen (exklusive des aktuellen Vorschlags)
+    const existingProposals = await Proposal.find({
+      _id: { $ne: proposalId },
+      status: { $nin: ["deleted", "rejected", "merged"] },
+      mergeSource: { $ne: true }, // Nur Vorschläge, die nicht bereits zusammengeführt wurden
+    })
+      .populate("categories.category", "name")
+      .populate("ministries.ministry", "name")
+      .sort({ createdAt: -1 }) // Neueste zuerst
+      .limit(15); // Beschränkung für Performanz
+
+    // Gemini API zur Analyse der Ähnlichkeit nutzen
+    const similarityAnalysis = await geminiService.analyzeProposalSimilarity(
+      proposal,
+      existingProposals
+    );
+
+    // Prüfen, ob der Vorschlag mit anderen zusammengeführt werden sollte
+    if (
+      similarityAnalysis.recommendation === "merge" &&
+      similarityAnalysis.similarProposals &&
+      similarityAnalysis.similarProposals.length > 0
+    ) {
+      // Ahnliche Vorschläge mit hoher Ähnlichkeit sammeln (Schwellenwert 0.7)
+      const similarProposalIds = similarityAnalysis.similarProposals
+        .filter((p) => p.similarityScore >= 0.7)
+        .map((p) => p.id);
+
+      if (similarProposalIds.length > 0) {
+        // Ähnliche Vorschläge holen
+        const targetProposals = await Proposal.find({
+          _id: { $in: similarProposalIds },
+        });
+
+        // Gemini API zum Zusammenführen der Vorschläge nutzen
+        const mergeResult = await geminiService.mergeProposals(
+          proposal,
+          targetProposals
+        );
+
+        // Neuen zusammengeführten Vorschlag erstellen
+        const mergedProposal = new Proposal({
+          title: mergeResult.title,
+          content: mergeResult.content,
+          status: "submitted",
+          user: proposal.user, // Der ursprüngliche Autor wird beibehalten
+          categories: proposal.categories, // Kategorien vom Ursprungsvorschlag übernehmen
+          ministries: proposal.ministries, // Ministerien vom Ursprungsvorschlag übernehmen
+          isMerged: true, // Markieren als zusammengeführter Vorschlag
+          mergeSource: false, // Ist nicht die Quelle einer Zusammenführung
+          mergeParents: [proposalId, ...similarProposalIds], // Speichert die Quell-IDs
+        });
+
+        const savedMergedProposal = await mergedProposal.save();
+
+        // Analyse für den neuen zusammengeführten Vorschlag erstellen
+        const mergedAnalysis = new ProposalAnalysis({
+          proposal: savedMergedProposal._id,
+          isMerged: true,
+          mergeSource: false,
+          mergeRationale: mergeResult.mergeRationale,
+          isProcessed: true,
+          lastProcessedAt: new Date(),
+        });
+
+        await mergedAnalysis.save();
+
+        // Quell- und Ziel-Vorschläge als Quellen einer Zusammenführung markieren
+        await Proposal.updateMany(
+          { _id: { $in: [proposalId, ...similarProposalIds] } },
+          {
+            isMerged: true,
+            mergeSource: true,
+            mergedInto: savedMergedProposal._id,
+            status: "merged",
+          }
+        );
+
+        // ProposalAnalysis-Einträge aktualisieren
+        await ProposalAnalysis.updateMany(
+          { proposal: { $in: [proposalId, ...similarProposalIds] } },
+          {
+            isMerged: true,
+            mergeSource: true,
+            mergedInto: savedMergedProposal._id,
+          }
+        );
+
+        return res.status(201).json({
+          message:
+            "Vorschlag wurde automatisch mit ähnlichen Vorschlägen zusammengeführt",
+          originalProposal: proposal,
+          mergedProposal: savedMergedProposal,
+          sourceProposalId: proposalId,
+          targetProposalIds: similarProposalIds,
+          mergeRationale: mergeResult.mergeRationale,
+          similarityAnalysis: similarityAnalysis,
+        });
+      }
+    }
+
+    // Wenn keine Zusammenführung stattfand, führe normale Analyse durch
+    // Bewertung des Vorschlags mit Gemini API
+    const evaluation = await geminiService.evaluateProposal(proposal);
+
+    // Kategorienvorschläge von Gemini API holen
+    const categories = await Category.find({ isActive: true });
+    const categorySuggestions = await geminiService.suggestCategories(
+      proposal,
+      categories
+    );
+
+    // Ähnliche Vorschläge IDs und Empfehlungen speichern
+    const similarProposalRefs = [];
+    if (
+      similarityAnalysis.similarProposals &&
+      similarityAnalysis.similarProposals.length > 0
+    ) {
+      // Referenzen auf ähnliche Vorschläge speichern
+      for (const similar of similarityAnalysis.similarProposals) {
+        similarProposalRefs.push({
+          proposal: similar.id,
+          similarityScore: similar.similarityScore,
+          reason: similar.reason,
+        });
+      }
+    }
+
+    // Kategorienvorschläge formatieren
+    const suggestedCategoryRefs = [];
+    if (
+      categorySuggestions.suggestedCategories &&
+      categorySuggestions.suggestedCategories.length > 0
+    ) {
+      for (const suggestion of categorySuggestions.suggestedCategories) {
+        // Kategorie-ID anhand des Namens finden
+        const category = categories.find(
+          (c) => c.name === suggestion.categoryName
+        );
+        if (category) {
+          suggestedCategoryRefs.push({
+            category: category._id,
+            confidence: suggestion.confidence,
+            reason: suggestion.reason,
+          });
+        }
+      }
+    }
+
+    // Analyse in der Datenbank speichern
+    const analysis = await ProposalAnalysis.create({
+      proposal: proposalId,
+      similarProposals: similarProposalRefs,
+      mergeStrategy: similarityAnalysis.mergeStrategy,
+      aiEvaluation: {
+        quality: evaluation.quality,
+        relevance: evaluation.relevance,
+        feasibility: evaluation.feasibility,
+        strengths: evaluation.strengths,
+        weaknesses: evaluation.weaknesses,
+        summary: evaluation.summary,
+      },
+      suggestedCategories: suggestedCategoryRefs,
+      isProcessed: true,
+      lastProcessedAt: new Date(),
+    });
+
+    // AI-Analyse auch im Vorschlag selbst speichern
+    await Proposal.findByIdAndUpdate(proposalId, {
+      aiAnalysis: {
+        quality: evaluation.quality,
+        relevance: evaluation.relevance,
+        feasibility: evaluation.feasibility,
+        keywords: evaluation.keywords || [],
+      },
+    });
+
+    // Lade die Analyse mit allen Beziehungen
+    const populatedAnalysis = await ProposalAnalysis.findById(
+      analysis._id
+    ).populate({
+      path: "similarProposals.proposal",
+      select: "title content",
+    });
+
+    return res.status(200).json({
+      message:
+        "Vorschlag erfolgreich analysiert (keine automatische Zusammenführung)",
+      analysis: populatedAnalysis,
+      similarityAnalysis: similarityAnalysis,
+      recommendation: similarityAnalysis.recommendation,
+    });
+  } catch (error) {
+    console.error(
+      "Fehler bei der automatischen Analyse und Zusammenführung:",
+      error
+    );
+    return res.status(500).json({
+      message: "Fehler bei der automatischen Analyse und Zusammenführung",
       error: error.message,
     });
   }
@@ -772,4 +1003,5 @@ module.exports = {
   getTopProposals,
   processUnanalyzedProposals,
   autoMergeProposals,
+  autoAnalyzeProposal,
 };

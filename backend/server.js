@@ -12,7 +12,7 @@ const aiRoutes = require("./routes/aiRoutes");
 
 // Erstellen der Express-App
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // MongoDB-Verbindung herstellen
 connectDB();
@@ -567,6 +567,42 @@ app.post("/api/proposals", async (req, res) => {
     const proposalData = req.body;
     const newProposal = new Proposal(proposalData);
     const savedProposal = await newProposal.save();
+
+    // Optional automatische Analyse und Zusammenführung starten
+    if (req.query.autoAnalyze === "true") {
+      // Hier rufen wir den Auto-Analyze-Endpunkt auf
+      // Anstatt direkt die Antwort zurückzugeben, fügen wir eine Information hinzu,
+      // dass die Analyse im Hintergrund läuft
+
+      // Starte den Analyseprozess im Hintergrund
+      process.nextTick(async () => {
+        try {
+          // Hier würden wir normalerweise einen HTTP-Request machen,
+          // aber da wir im selben Prozess sind, können wir die Controller-Funktion direkt aufrufen
+          const aiController = require("./controllers/aiController");
+          await aiController.autoAnalyzeProposal(
+            {
+              params: { proposalId: savedProposal._id.toString() },
+            },
+            {
+              status: () => ({ json: () => {} }), // Mock response object
+            }
+          );
+        } catch (error) {
+          console.error(
+            "Fehler bei der automatischen Hintergrundanalyse:",
+            error
+          );
+        }
+      });
+
+      return res.status(201).json({
+        ...savedProposal.toObject(),
+        message:
+          "Vorschlag erstellt. Automatische Analyse und ggf. Zusammenführung läuft im Hintergrund.",
+        analysisStatus: "pending",
+      });
+    }
 
     res.status(201).json(savedProposal);
   } catch (error) {

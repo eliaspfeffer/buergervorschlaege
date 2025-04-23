@@ -26,4 +26,10 @@ router.post(
 // Automatische Zusammenführung von ähnlichen Vorschlägen
 router.post("/proposals/auto-merge", aiController.autoMergeProposals);
 
+// Analysiere und führe einen neuen Vorschlag bei Bedarf automatisch zusammen
+router.post(
+  "/proposals/:proposalId/auto-analyze",
+  aiController.autoAnalyzeProposal
+);
+
 module.exports = router;
