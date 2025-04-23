@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bürgerbeteiligungssystem - Ihre Ideen für eine bessere Politik</title>
+    <meta name="description" content="Reichen Sie Ihre Vorschläge an die Politik ein und verfolgen Sie deren Bearbeitung durch die zuständigen Ministerien.">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Slab:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav class="navbar">
+            <div class="container d-flex justify-content-between align-items-center">
+                <a href="index.html" class="navbar-brand">
+                    <img src="images/logo.svg" alt="Bürgerbeteiligungssystem Logo" height="40">
+                    <span class="d-none d-md-inline">Bürgerbeteiligung</span>
+                </a>
+                
+                <button class="navbar-toggler d-md-none" type="button" id="navbarToggler">
+                    <span class="material-icons">menu</span>
+                </button>
+                
+                <div class="navbar-collapse d-none d-md-block" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="index.html">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="proposals.html">Vorschläge</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="categories.html">Kategorien</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="about.html">Über uns</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="contact.html">Kontakt</a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="d-flex align-items-center">
+                    <a href="login.html" class="btn btn-secondary btn-sm mr-2 d-none d-md-inline-block">Anmelden</a>
+                    <a href="register.html" class="btn btn-primary btn-sm">Registrieren</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav d-md-none d-none" id="mobileNav">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link active" href="index.html">Home</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="proposals.html">Vorschläge</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="categories.html">Kategorien</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="about.html">Über uns</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="contact.html">Kontakt</a>
+            </li>
+            <li class="nav-item mt-3">
+                <a href="login.html" class="btn btn-secondary btn-sm mr-2">Anmelden</a>
+                <a href="register.html" class="btn btn-primary btn-sm">Registrieren</a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero bg-primary-dark text-white">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-7">
+                    <h1>Ihre Ideen für eine bessere Politik</h1>
+                    <p class="lead mb-4">Reichen Sie Ihre Vorschläge ein, verfolgen Sie deren Bearbeitung und helfen Sie mit, die Politik bürgernäher zu gestalten.</p>
+                    <a href="submit-proposal.html" class="btn btn-lg btn-success">Vorschlag einreichen</a>
+                </div>
+                <div class="col-md-5 d-none d-md-block">
+                    <img src="images/hero-illustration.svg" alt="Bürger und Politik im Dialog" class="img-fluid">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="section bg-light">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="text-center mb-3">
+                                <span class="material-icons" style="font-size: 48px; color: var(--color-primary);">lightbulb</span>
+                            </div>
+                            <h3 class="card-title text-center">Wie es funktioniert</h3>
+                            <ol class="mt-4">
+                                <li class="mb-3">
+                                    <strong>Vorschlag einreichen</strong>
+                                    <p>Beschreiben Sie Ihren Vorschlag und wählen Sie eine passende Kategorie.</p>
+                                </li>
+                                <li class="mb-3">
+                                    <strong>KI-Verarbeitung</strong>
+                                    <p>Unser KI-System analysiert, kategorisiert und leitet Ihren Vorschlag an das zuständige Ministerium weiter.</p>
+                                </li>
+                                <li class="mb-3">
+                                    <strong>Bearbeitung</strong>
+                                    <p>Das Ministerium prüft Ihren Vorschlag und gibt eine Rückmeldung.</p>
+                                </li>
+                                <li>
+                                    <strong>Transparenz</strong>
+                                    <p>Verfolgen Sie den Status Ihres Vorschlags und sehen Sie die Antworten der Ministerien.</p>
+                                </li>
+                            </ol>
+                            <div class="text-center mt-4">
+                                <a href="how-it-works.html" class="btn btn-secondary">Mehr erfahren</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mt-4 mt-md-0">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="text-center mb-3">
+                                <span class="material-icons" style="font-size: 48px; color: var(--color-primary);">insert_chart</span>
+                            </div>
+                            <h3 class="card-title text-center">Aktuelle Statistik</h3>
+                            <div class="row text-center mt-4">
+                                <div class="col-6 mb-4">
+                                    <div class="h2 text-primary">1,248</div>
+                                    <div>Eingereichte Vorschläge</div>
+                                </div>
+                                <div class="col-6 mb-4">
+                                    <div class="h2 text-primary">723</div>
+                                    <div>Bearbeitete Vorschläge</div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="h2 text-primary">15</div>
+                                    <div>Ministerien beteiligt</div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="h2 text-primary">42</div>
+                                    <div>Umgesetzte Ideen</div>
+                                </div>
+                            </div>
+                            <div class="text-center mt-4">
+                                <a href="statistics.html" class="btn btn-secondary">Detaillierte Statistiken</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Top Proposals Section -->
+    <section class="section">
+        <div class="container">
+            <h2 class="text-center mb-5">Aktuelle Top-Vorschläge</h2>
+            <div class="row">
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="card card-status card-status-processing h-100">
+                        <div class="card-body">
+                            <h4 class="card-title">Mehr Fahrradwege in der Innenstadt</h4>
+                            <div class="mb-2">
+                                <span class="badge badge-primary">Verkehr</span>
+                                <span class="badge badge-light">Umwelt</span>
+                            </div>
+                            <p class="card-text">Ich schlage vor, mehr Fahrradwege in der Innenstadt zu bauen, um den Verkehr zu entlasten und die Umwelt zu schonen.</p>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <small class="text-muted">01.03.2025</small>
+                                <span class="badge badge-warning">In Bearbeitung</span>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white border-top-0">
+                            <a href="proposal-details.html?id=1" class="btn btn-link p-0">Details anzeigen</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="card card-status card-status-submitted h-100">
+                        <div class="card-body">
+                            <h4 class="card-title">Digitale Ausstattung für Schulen</h4>
+                            <div class="mb-2">
+                                <span class="badge badge-primary">Bildung</span>
+                                <span class="badge badge-light">Digitalisierung</span>
+                            </div>
+                            <p class="card-text">Die Schulen sollten besser mit digitalen Geräten ausgestattet werden, damit die Schüler auf die digitale Zukunft vorbereitet sind.</p>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <small class="text-muted">05.03.2025</small>
+                                <span class="badge badge-primary">Eingereicht</span>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white border-top-0">
+                            <a href="proposal-details.html?id=2" class="btn btn-link p-0">Details anzeigen</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="card card-status card-status-answered h-100">
+                        <div class="card-body">
+                            <h4 class="card-title">Mehr Grünflächen in der Stadt</h4>
+                            <div class="mb-2">
+                                <span class="badge badge-primary">Umwelt</span>
+                                <span class="badge badge-light">Gesundheit</span>
+                            </div>
+                            <p class="card-text">Es sollten mehr Grünflächen in der Stadt angelegt werden, um die Luftqualität zu verbessern und den Bürgern Erholungsmöglichkeiten zu bieten.</p>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <small class="text-muted">10.03.2025</small>
+                                <span class="badge badge-success">Beantwortet</span>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white border-top-0">
+                            <a href="proposal-details.html?id=3" class="btn btn-link p-0">Details anzeigen</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="card card-status card-status-completed h-100">
+                        <div class="card-body">
+                            <h4 class="card-title">Ausbau des ÖPNV</h4>
+                            <div class="mb-2">
+                                <span class="badge badge-primary">Verkehr</span>
+                                <span class="badge badge-light">Umwelt</span>
+                            </div>
+                            <p class="card-text">Der öffentliche Nahverkehr sollte ausgebaut werden, um mehr Menschen eine Alternative zum Auto zu bieten und die Umweltbelastung zu reduzieren.</p>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <small class="text-muted">12.03.2025</small>
+                                <span class="badge badge-dark">Abgeschlossen</span>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white border-top-0">
+                            <a href="proposal-details.html?id=4" class="btn btn-link p-0">Details anzeigen</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-4">
+                <a href="proposals.html" class="btn btn-primary">Alle Vorschläge anzeigen</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trending Topics Section -->
+    <section class="section bg-light">
+        <div class="container">
+            <h2 class="text-center mb-5">Aktuelle Trends</h2>
+            <div class="trends-container text-center">
+                <a href="proposals.html?trend=umweltschutz" class="trend-tag">#Umweltschutz</a>
+                <a href="proposals.html?trend=digitalisierung" class="trend-tag">#Digitalisierung</a>
+                <a href="proposals.html?trend=oepnv" class="trend-tag">#ÖPNV</a>
+                <a href="proposals.html?trend=bildung" class="trend-tag">#Bildung</a>
+                <a href="proposals.html?trend=gesundheit" class="trend-tag">#Gesundheit</a>
+                <a href="proposals.html?trend=wohnraum" class="trend-tag">#Wohnraum</a>
+                <a href="proposals.html?trend=energiewende" class="trend-tag">#Energiewende</a>
+                <a href="proposals.html?trend=infrastruktur" class="trend-tag">#Infrastruktur</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Categories Section -->
+    <section class="section">
+        <div class="container">
+            <h2 class="text-center mb-5">Kategorien</h2>
+            <div class="row">
+                <div class="col-md-4 col-lg-3 mb-4">
+                    <a href="proposals.html?category=bildung" class="category-card">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <span class="material-icons" style="font-size: 48px; color: var(--color-primary);">school</span>
+                                <h4 class="mt-3">Bildung</h4>
+                                <p class="text-muted">127 Vorschläge</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-4 col-lg-3 mb-4">
+                    <a href="proposals.html?category=umwelt" class="category-card">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <span class="material-icons" style="font-size: 48px; color: var(--color-primary);">eco</span>
+                                <h4 class="mt-3">Umwelt</h4>
+                                <p class="text-muted">215 Vorschläge</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-4 col-lg-3 mb-4">
+                    <a href="proposals.html?category=verkehr" class="category-card">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <span class="material-icons" style="font-size: 48px; color: var(--color-primary);">directions_car</span>
+                                <h4 class="mt-3">Verkehr</h4>
+                                <p class="text-muted">183 Vorschläge</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-4 col-lg-3 mb-4">
+                    <a href="proposals.html?category=gesundheit" class="category-card">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <span class="material-icons" style="font-size: 48px; color: var(--color-primary);">favorite</span>
+                                <h4 class="mt-3">Gesundheit</h4>
+                                <p class="text-muted">98 Vorschläge</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-4 col-lg-3 mb-4">
+                    <a href="proposals.html?category=digitalisierung" class="category-card">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <span class="material-icons" style="font-size: 48px; color: var(--color-primary);">computer</span>
+                                <h4 class="mt-3">Digitalisierung</h4>
+                                <p class="text-muted">156 Vorschläge</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-4 col-lg-3 mb-4">
+                    <a href="proposals.html?category=wirtschaft" class="category-card">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <span class="material-icons" style="font-size: 48px; color: var(--color-primary);">business</span>
+                                <h4 class="mt-3">Wirtschaft</h4>
+                                <p class="text-muted">112 Vorschläge</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-4 col-lg-3 mb-4">
+                    <a href="proposals.html?category=soziales" class="category-card">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <span class="material-icons" style="font-size: 48px; color: var(--color-primary);">people</span>
+                                <h4 class="mt-3">Soziales</h4>
+                                <p class="text-muted">87 Vorschläge</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-4 col-lg-3 mb-4">
+                    <a href="categories.html" class="category-card">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <span class="material-icons" style="font-size: 48px; color: var(--color-primary);">more_horiz</span>
+                                <h4 class="mt-3">Weitere Kategorien</h4>
+                                <p class="text-muted">Alle anzeigen</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="section bg-primary-dark text-white">
+        <div class="container text-center">
+            <h2 class="mb-4">Haben Sie einen Vorschlag?</h2>
+            <p class="lead mb-4">Teilen Sie Ihre Ideen mit uns und helfen Sie mit, die Politik zu verbessern.</p>
+            <a href="submit-proposal.html" class="btn btn-lg btn-success">Vorschlag einreichen</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <h5 class="footer-heading">Bürgerbeteiligung</h5>
+                    <p>Eine Plattform für den direkten Dialog zwischen Bürgern und Politik. Ihre Ideen für eine bessere Zukunft.</p>
+                </div>
+                <div class="col-md-2 mb-4 mb-md-0">
+                    <h5 class="footer-heading">Navigation</h5>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="proposals.html">Vorschläge</a></li>
+                        <li><a href="categories.html">Kategorien</a></li>
+                        <li><a href="about.html">Über uns</a></li>
+                        <li><a href="contact.html">Kontakt</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3 mb-4 mb-md-0">
+                    <h5 class="footer-heading">Rechtliches</h5>
+                    <ul class="footer-links">
+                        <li><a href="privacy.html">Datenschutz</a></li>
+                        <li><a href="terms.html">Nutzungsbedingungen</a></li>
+                        <li><a href="imprint.html">Impressum</a></li>
+                        <li><a href="accessibility.html">Barrierefreiheit</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5 class="footer-heading">Kontakt</h5>
+                    <ul class="footer-links">
+                        <li><a href="mailto:info@buergerbeteiligung.de">info@buergerbeteiligung.de</a></li>
+                        <li><a href="tel:+4930123456789">+49 30 123 456 789</a></li>
+                    </ul>
+                    <div class="social-links mt-3">
+                        <a href="#" aria-label="Facebook"><span class="material-icons">facebook</span></a>
+                        <a href="#" aria-label="Twitter"><span class="material-icons">twitter</span></a>
+                        <a href="#" aria-label="Instagram"><span class="material-icons">instagram</span></a>
+                        <a href="#" aria-label="YouTube"><span class="material-icons">youtube_searched_for</span></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom mt-4 pt-4">
+                <div class="row">
+                    <div class="col-md-6 mb-2 mb-md-0">
+                        <p>&copy; 2025 Bürgerbeteiligungssystem. Alle Rechte vorbehalten.</p>
+                    </div>
+                    <div class="col-md-6 text-md-right">
+                        <p>Ein Projekt der Bundesregierung</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Custom Styles for this page -->
+    <style>
+        .hero {
+            padding: 5rem 0;
+            background-color: var(--color-primary-dark);
+            background-image: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
+        }
+        
+        .hero h1 {
+            color: var(--color-white);
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .hero .lead {
+            font-size: 1.25rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .trend-tag {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            margin: 0.5rem;
+            background-color: var(--color-primary-light);
+            color: var(--color-white);
+            border-radius: 2rem;
+            font-weight: 500;
+            transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+        }
+        
+        .trend-tag:hover {
+            text-decoration: none;
+            color: var(--color-white);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .category-card {
+            display: block;
+            color: inherit;
+            transition: transform var(--transition-fast);
+        }
+        
+        .category-card:hover {
+            text-decoration: none;
+            color: inherit;
+            transform: translateY(-5px);
+        }
+        
+        .social-links a {
+            display: inline-block;
+            margin-right: 1rem;
+            color: var(--color-white);
+            opacity: 0.8;
+            transition: opacity var(--transition-fast);
+        }
+        
+        .social-links a:hover {
+            opacity: 1;
+        }
+        
+        @media (max-width: 767.98px) {
+            .hero {
+                padding: 3rem 0;
+            }
+            
+            .hero h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+
+    <!-- JavaScript -->
+    <script>
+        // Mobile Navigation Toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const navbarToggler = document.getElementById('navbarToggler');
+            const mobileNav = document.getElementById('mobileNav');
+            
+            if (navbarToggler && mobileNav) {
+                navbarToggler.addEventListener('click', function() {
+                    mobileNav.classList.toggle('d-none');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

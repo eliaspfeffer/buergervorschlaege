@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vorschlag einreichen - Bürgerbeteiligungssystem</title>
+    <meta name="description" content="Reichen Sie Ihren Vorschlag an die Politik ein und helfen Sie mit, die Zukunft zu gestalten.">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Slab:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav class="navbar">
+            <div class="container d-flex justify-content-between align-items-center">
+                <a href="index.html" class="navbar-brand">
+                    <img src="images/logo.svg" alt="Bürgerbeteiligungssystem Logo" height="40">
+                    <span class="d-none d-md-inline">Bürgerbeteiligung</span>
+                </a>
+                
+                <button class="navbar-toggler d-md-none" type="button" id="navbarToggler">
+                    <span class="material-icons">menu</span>
+                </button>
+                
+                <div class="navbar-collapse d-none d-md-block" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link" href="index.html">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="proposals.html">Vorschläge</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="categories.html">Kategorien</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="about.html">Über uns</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="contact.html">Kontakt</a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="d-flex align-items-center">
+                    <a href="login.html" class="btn btn-secondary btn-sm mr-2 d-none d-md-inline-block">Anmelden</a>
+                    <a href="register.html" class="btn btn-primary btn-sm">Registrieren</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav d-md-none d-none" id="mobileNav">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link" href="index.html">Home</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="proposals.html">Vorschläge</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="categories.html">Kategorien</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="about.html">Über uns</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="contact.html">Kontakt</a>
+            </li>
+            <li class="nav-item mt-3">
+                <a href="login.html" class="btn btn-secondary btn-sm mr-2">Anmelden</a>
+                <a href="register.html" class="btn btn-primary btn-sm">Registrieren</a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Breadcrumbs -->
+    <div class="container mt-3">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Vorschlag einreichen</li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container section">
+        <div class="row">
+            <div class="col-lg-8">
+                <h1 class="mb-4">Vorschlag einreichen</h1>
+                
+                <div class="alert alert-info mb-4">
+                    <div class="d-flex">
+                        <span class="material-icons mr-3">info</span>
+                        <div>
+                            <strong>Hinweis:</strong> Alle mit * markierten Felder sind Pflichtfelder. Ihr Vorschlag wird nach dem Absenden von unserem KI-System analysiert und an das zuständige Ministerium weitergeleitet.
+                        </div>
+                    </div>
+                </div>
+                
+                <form id="proposalForm" class="needs-validation" novalidate>
+                    <!-- Titel -->
+                    <div class="form-group">
+                        <label for="proposalTitle" class="form-label">Titel des Vorschlags *</label>
+                        <input type="text" class="form-control" id="proposalTitle" placeholder="Geben Sie einen prägnanten Titel ein" required>
+                        <div class="invalid-feedback">
+                            Bitte geben Sie einen Titel für Ihren Vorschlag ein.
+                        </div>
+                    </div>
+                    
+                    <!-- Kategorie -->
+                    <div class="form-group">
+                        <label for="proposalCategory" class="form-label">Kategorie *</label>
+                        <select class="form-select" id="proposalCategory" required>
+                            <option value="" selected disabled>Bitte wählen Sie eine Kategorie</option>
+                            <option value="bildung">Bildung</option>
+                            <option value="umwelt">Umwelt</option>
+                            <option value="verkehr">Verkehr</option>
+                            <option value="gesundheit">Gesundheit</option>
+                            <option value="digitalisierung">Digitalisierung</option>
+                            <option value="wirtschaft">Wirtschaft</option>
+                            <option value="soziales">Soziales</option>
+                            <option value="kultur">Kultur</option>
+                            <option value="sicherheit">Sicherheit</option>
+                            <option value="infrastruktur">Infrastruktur</option>
+                            <option value="sonstiges">Sonstiges</option>
+                        </select>
+                        <div class="invalid-feedback">
+                            Bitte wählen Sie eine Kategorie aus.
+                        </div>
+                    </div>
+                    
+                    <!-- Beschreibung -->
+                    <div class="form-group">
+                        <label for="proposalDescription" class="form-label">Beschreibung *</label>
+                        <textarea class="form-control" id="proposalDescription" rows="8" placeholder="Beschreiben Sie Ihren Vorschlag detailliert. Was ist Ihre Idee? Warum ist sie wichtig? Wie könnte sie umgesetzt werden?" required></textarea>
+                        <div class="invalid-feedback">
+                            Bitte beschreiben Sie Ihren Vorschlag.
+                        </div>
+                        <small class="form-text text-muted">
+                            Mindestens 100 Zeichen, maximal 5000 Zeichen.
+                        </small>
+                    </div>
+                    
+                    <!-- Anhänge -->
+                    <div class="form-group">
+                        <label for="proposalAttachments" class="form-label">Anhänge (optional)</label>
+                        <div class="form-file">
+                            <input type="file" class="form-file-input" id="proposalAttachments" multiple>
+                            <label class="form-file-label" for="proposalAttachments">
+                                <span class="material-icons mr-2">attach_file</span>
+                                Dateien auswählen
+                            </label>
+                            <span class="form-file-text ml-2">Keine Dateien ausgewählt</span>
+                        </div>
+                        <small class="form-text text-muted">
+                            Sie können bis zu 3 Dateien anhängen (max. 5 MB pro Datei, Formate: PDF, DOC, DOCX, JPG, PNG).
+                        </small>
+                    </div>
+                    
+                    <!-- Tags -->
+                    <div class="form-group">
+                        <label for="proposalTags" class="form-label">Schlagworte (optional)</label>
+                        <input type="text" class="form-control" id="proposalTags" placeholder="z.B. Nachhaltigkeit, Innovation, Bildungschancen (durch Kommas getrennt)">
+                        <small class="form-text text-muted">
+                            Geben Sie relevante Schlagworte ein, um Ihren Vorschlag besser auffindbar zu machen.
+                        </small>
+                    </div>
+                    
+                    <!-- Anonymität -->
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="anonymousProposal">
+                            <label class="form-check-label" for="anonymousProposal">
+                                Vorschlag anonym einreichen
+                            </label>
+                        </div>
+                        <small class="form-text text-muted">
+                            Wenn aktiviert, wird Ihr Name nicht öffentlich angezeigt. Für die Bearbeitung durch das Ministerium sind Ihre Daten jedoch weiterhin verfügbar.
+                        </small>
+                    </div>
+                    
+                    <!-- Datenschutz -->
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="privacyConsent" required>
+                            <label class="form-check-label" for="privacyConsent">
+                                Ich habe die <a href="privacy.html" target="_blank">Datenschutzerklärung</a> gelesen und stimme der Verarbeitung meiner Daten zu. *
+                            </label>
+                            <div class="invalid-feedback">
+                                Sie müssen der Datenschutzerklärung zustimmen, um fortfahren zu können.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Nutzungsbedingungen -->
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="termsConsent" required>
+                            <label class="form-check-label" for="termsConsent">
+                                Ich akzeptiere die <a href="terms.html" target="_blank">Nutzungsbedingungen</a> und bestätige, dass mein Vorschlag keine rechtswidrigen oder beleidigenden Inhalte enthält. *
+                            </label>
+                            <div class="invalid-feedback">
+                                Sie müssen den Nutzungsbedingungen zustimmen, um fortfahren zu können.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <div class="form-group mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">Vorschlag einreichen</button>
+                        <button type="button" class="btn btn-secondary ml-2">Entwurf speichern</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="col-lg-4 mt-5 mt-lg-0">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4 class="mb-0">Tipps für gute Vorschläge</h4>
+                    </div>
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            <li class="mb-2">Formulieren Sie Ihren Vorschlag klar und präzise.</li>
+                            <li class="mb-2">Beschreiben Sie das Problem, das Sie lösen möchten.</li>
+                            <li class="mb-2">Erklären Sie, warum Ihr Vorschlag wichtig ist.</li>
+                            <li class="mb-2">Nennen Sie mögliche Lösungsansätze oder Umsetzungsideen.</li>
+                            <li>Fügen Sie relevante Fakten oder Beispiele hinzu.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4 class="mb-0">So geht es weiter</h4>
+                    </div>
+                    <div class="card-body">
+                        <ol class="mb-0">
+                            <li class="mb-2">Ihr Vorschlag wird von unserem KI-System analysiert und kategorisiert.</li>
+                            <li class="mb-2">Das zuständige Ministerium erhält Ihren Vorschlag zur Bearbeitung.</li>
+                            <li class="mb-2">Sie werden per E-Mail über Statusänderungen informiert.</li>
+                            <li>Sie können den Fortschritt jederzeit in Ihrem Benutzerkonto verfolgen.</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="mb-0">Häufig gestellte Fragen</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="accordion" id="faqAccordion">
+                            <div class="mb-3">
+                                <h5 class="mb-1">
+                                    <button class="btn btn-link p-0 text-left" type="button" data-toggle="collapse" data-target="#faq1">
+                                        Wie lange dauert die Bearbeitung?
+                                    </button>
+                                </h5>
+                                <div id="faq1" class="collapse" data-parent="#faqAccordion">
+                                    <p class="mt-2">Die durchschnittliche Bearbeitungszeit beträgt 2-4 Wochen, abhängig von der Komplexität des Vorschlags und der Auslastung des zuständigen Ministeriums.</p>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <h5 class="mb-1">
+                                    <button class="btn btn-link p-0 text-left" type="button" data-toggle="collapse" data-target="#faq2">
+                                        Kann ich meinen Vorschlag nachträglich bearbeiten?
+                                    </button>
+                                </h5>
+                                <div id="faq2" class="collapse" data-parent="#faqAccordion">
+                                    <p class="mt-2">Solange der Vorschlag den Status "Eingereicht" hat, können Sie ihn noch bearbeiten. Sobald er in Bearbeitung ist, sind keine Änderungen mehr möglich.</p>
+                                </div>
+                            </div>
+                            <div>
+                                <h5 class="mb-1">
+                                    <button class="btn btn-link p-0 text-left" type="button" data-toggle="collapse" data-target="#faq3">
+                                        Wer kann meinen Vorschlag sehen?
+                                    </button>
+                                </h5>
+                                <div id="faq3" class="collapse" data-parent="#faqAccordion">
+                                    <p class="mt-2">Alle eingereichten Vorschläge sind öffentlich einsehbar, es sei denn, Sie haben die Option "Anonym einreichen" gewählt. In diesem Fall wird Ihr Name nicht angezeigt.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <h5 class="footer-heading">Bürgerbeteiligung</h5>
+                    <p>Eine Plattform für den direkten Dialog zwischen Bürgern und Politik. Ihre Ideen für eine bessere Zukunft.</p>
+                </div>
+                <div class="col-md-2 mb-4 mb-md-0">
+                    <h5 class="footer-heading">Navigation</h5>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="proposals.html">Vorschläge</a></li>
+                        <li><a href="categories.html">Kategorien</a></li>
+                        <li><a href="about.html">Über uns</a></li>
+                        <li><a href="contact.html">Kontakt</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3 mb-4 mb-md-0">
+                    <h5 class="footer-heading">Rechtliches</h5>
+                    <ul class="footer-links">
+                        <li><a href="privacy.html">Datenschutz</a></li>
+                        <li><a href="terms.html">Nutzungsbedingungen</a></li>
+                        <li><a href="imprint.html">Impressum</a></li>
+                        <li><a href="accessibility.html">Barrierefreiheit</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5 class="footer-heading">Kontakt</h5>
+                    <ul class="footer-links">
+                        <li><a href="mailto:info@buergerbeteiligung.de">info@buergerbeteiligung.de</a></li>
+                        <li><a href="tel:+4930123456789">+49 30 123 456 789</a></li>
+                    </ul>
+                    <div class="social-links mt-3">
+                        <a href="#" aria-label="Facebook"><span class="material-icons">facebook</span></a>
+                        <a href="#" aria-label="Twitter"><span class="material-icons">twitter</span></a>
+                        <a href="#" aria-label="Instagram"><span class="material-icons">instagram</span></a>
+                        <a href="#" aria-label="YouTube"><span class="material-icons">youtube_searched_for</span></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom mt-4 pt-4">
+                <div class="row">
+                    <div class="col-md-6 mb-2 mb-md-0">
+                        <p>&copy; 2025 Bürgerbeteiligungssystem. Alle Rechte vorbehalten.</p>
+                    </div>
+                    <div class="col-md-6 text-md-right">
+                        <p>Ein Projekt der Bundesregierung</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Custom Styles for this page -->
+    <style>
+        .form-file {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .form-file-input {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .form-file-label {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--color-gray-500);
+            border-radius: var(--border-radius-sm);
+            background-color: var(--color-white);
+            cursor: pointer;
+        }
+        
+        .social-links a {
+            display: inline-block;
+            margin-right: 1rem;
+            color: var(--color-white);
+            opacity: 0.8;
+            transition: opacity var(--transition-fast);
+        }
+        
+        .social-links a:hover {
+            opacity: 1;
+        }
+        
+        .accordion .btn-link {
+            color: var(--color-primary);
+            font-weight: 500;
+            text-decoration: none;
+            width: 100%;
+            text-align: left;
+        }
+        
+        .accordion .btn-link:hover, 
+        .accordion .btn-link:focus {
+            color: var(--color-primary-dark);
+            text-decoration: none;
+        }
+    </style>
+
+    <!-- JavaScript -->
+    <script>
+        // Mobile Navigation Toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const navbarToggler = document.getElementById('navbarToggler');
+            const mobileNav = document.getElementById('mobileNav');
+            
+            if (navbarToggler && mobileNav) {
+                navbarToggler.addEventListener('click', function() {
+                    mobileNav.classList.toggle('d-none');
+                });
+            }
+            
+            // Form Validation
+            const form = document.getElementById('proposalForm');
+            
+            if (form) {
+                form.addEventListener('submit', function(event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    } else {
+                        // Hier würde normalerweise der AJAX-Request erfolgen
+                        event.preventDefault();
+                        alert('Vielen Dank! Ihr Vorschlag wurde erfolgreich eingereicht.');
+                        form.reset();
+                    }
+                    
+                    form.classList.add('was-validated');
+                });
+            }
+            
+            // File Input Handling
+            const fileInput = document.getElementById('proposalAttachments');
+            const fileText = document.querySelector('.form-file-text');
+            
+            if (fileInput && fileText) {
+                fileInput.addEventListener('change', function() {
+                    if (fileInput.files.length > 0) {
+                        if (fileInput.files.length === 1) {
+                            fileText.textContent = fileInput.files[0].name;
+                        } else {
+                            fileText.textContent = fileInput.files.length + ' Dateien ausgewählt';
+                        }
+                    } else {
+                        fileText.textContent = 'Keine Dateien ausgewählt';
+                    }
+                });
+            }
+            
+            // Simple Accordion
+            const accordionButtons = document.querySelectorAll('[data-toggle="collapse"]');
+            
+            accordionButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const targetId = this.getAttribute('data-target');
+                    const targetElement = document.querySelector(targetId);
+                    
+                    if (targetElement) {
+                        targetElement.classList.toggle('collapse');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

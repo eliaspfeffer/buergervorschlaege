@@ -1,0 +1,575 @@
+/* Responsive Design Ergänzungen für das Bürgerbeteiligungssystem */
+
+/* Mobile-First Ansatz: Basis-Styles sind für mobile Geräte */
+
+/* Allgemeine responsive Anpassungen */
+.container {
+  width: 100%;
+  padding-right: var(--spacing-sm);
+  padding-left: var(--spacing-sm);
+  margin-right: auto;
+  margin-left: auto;
+}
+
+/* Verstecken von Elementen auf kleinen Bildschirmen */
+.d-none {
+  display: none !important;
+}
+
+/* Mobile Navigation */
+.mobile-nav {
+  background-color: var(--color-white);
+  padding: var(--spacing-sm);
+  border-top: 1px solid var(--color-gray-300);
+  box-shadow: var(--shadow-md);
+}
+
+.mobile-nav .navbar-nav {
+  padding-left: 0;
+  margin-bottom: 0;
+  list-style: none;
+}
+
+.mobile-nav .nav-item {
+  margin-bottom: var(--spacing-xs);
+}
+
+.mobile-nav .nav-link {
+  display: block;
+  padding: var(--spacing-xs) 0;
+  color: var(--color-gray-700);
+  text-decoration: none;
+}
+
+.mobile-nav .nav-link.active {
+  color: var(--color-primary-dark);
+  font-weight: 500;
+}
+
+/* Hero-Bereich für mobile Geräte */
+.hero {
+  padding: var(--spacing-lg) 0;
+  text-align: center;
+}
+
+.hero h1 {
+  font-size: 1.75rem;
+}
+
+.hero .lead {
+  font-size: 1rem;
+}
+
+/* Karten-Layout für mobile Geräte */
+.card {
+  margin-bottom: var(--spacing-md);
+}
+
+/* Formular-Anpassungen für mobile Geräte */
+.form-group {
+  margin-bottom: var(--spacing-md);
+}
+
+.btn-block {
+  display: block;
+  width: 100%;
+}
+
+/* Tabellen für mobile Geräte */
+.table-responsive {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Alternative Darstellung für Tabellen auf mobilen Geräten */
+.table-mobile {
+  display: block;
+}
+
+.table-mobile thead {
+  display: none;
+}
+
+.table-mobile tbody {
+  display: block;
+}
+
+.table-mobile tr {
+  display: block;
+  margin-bottom: var(--spacing-md);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--border-radius-sm);
+}
+
+.table-mobile td {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: none;
+  border-bottom: 1px solid var(--color-gray-300);
+}
+
+.table-mobile td:last-child {
+  border-bottom: none;
+}
+
+.table-mobile td::before {
+  content: attr(data-label);
+  font-weight: 500;
+  margin-right: var(--spacing-sm);
+}
+
+/* Footer für mobile Geräte */
+.footer {
+  text-align: center;
+}
+
+.footer-links {
+  margin-bottom: var(--spacing-md);
+}
+
+/* Tablet-Breakpoint (768px) */
+@media (min-width: 768px) {
+  .container {
+    max-width: 720px;
+    padding-right: var(--spacing-md);
+    padding-left: var(--spacing-md);
+  }
+  
+  .d-md-block {
+    display: block !important;
+  }
+  
+  .d-md-none {
+    display: none !important;
+  }
+  
+  .d-md-inline-block {
+    display: inline-block !important;
+  }
+  
+  .d-md-inline {
+    display: inline !important;
+  }
+  
+  .d-md-flex {
+    display: flex !important;
+  }
+  
+  /* Navigation für Tablets */
+  .navbar-collapse {
+    display: flex !important;
+  }
+  
+  .navbar-nav {
+    display: flex;
+    flex-direction: row;
+    padding-left: 0;
+    margin-bottom: 0;
+    list-style: none;
+  }
+  
+  .navbar-nav .nav-link {
+    padding-right: var(--spacing-sm);
+    padding-left: var(--spacing-sm);
+  }
+  
+  /* Hero-Bereich für Tablets */
+  .hero {
+    padding: var(--spacing-xl) 0;
+    text-align: left;
+  }
+  
+  .hero h1 {
+    font-size: 2rem;
+  }
+  
+  .hero .lead {
+    font-size: 1.125rem;
+  }
+  
+  /* Karten-Layout für Tablets */
+  .card-deck {
+    display: flex;
+    flex-flow: row wrap;
+    margin-right: calc(-1 * var(--spacing-sm));
+    margin-left: calc(-1 * var(--spacing-sm));
+  }
+  
+  .card-deck .card {
+    flex: 1 0 0%;
+    margin-right: var(--spacing-sm);
+    margin-left: var(--spacing-sm);
+  }
+  
+  /* Footer für Tablets */
+  .footer {
+    text-align: left;
+  }
+  
+  .text-md-right {
+    text-align: right !important;
+  }
+  
+  /* Tabellen für Tablets */
+  .table-mobile {
+    display: table;
+  }
+  
+  .table-mobile thead {
+    display: table-header-group;
+  }
+  
+  .table-mobile tbody {
+    display: table-row-group;
+  }
+  
+  .table-mobile tr {
+    display: table-row;
+    margin-bottom: 0;
+    border: none;
+  }
+  
+  .table-mobile td {
+    display: table-cell;
+    padding: 0.75rem;
+    border-top: 1px solid var(--color-gray-300);
+  }
+  
+  .table-mobile td::before {
+    content: none;
+  }
+}
+
+/* Desktop-Breakpoint (992px) */
+@media (min-width: 992px) {
+  .container {
+    max-width: 960px;
+  }
+  
+  .d-lg-block {
+    display: block !important;
+  }
+  
+  .d-lg-none {
+    display: none !important;
+  }
+  
+  .d-lg-inline-block {
+    display: inline-block !important;
+  }
+  
+  .d-lg-inline {
+    display: inline !important;
+  }
+  
+  .d-lg-flex {
+    display: flex !important;
+  }
+  
+  /* Hero-Bereich für Desktop */
+  .hero {
+    padding: var(--spacing-xl) 0;
+  }
+  
+  .hero h1 {
+    font-size: 2.5rem;
+  }
+  
+  .hero .lead {
+    font-size: 1.25rem;
+  }
+  
+  /* Formular-Layout für Desktop */
+  .form-row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-right: calc(-1 * var(--spacing-sm));
+    margin-left: calc(-1 * var(--spacing-sm));
+  }
+  
+  .form-row > .col,
+  .form-row > [class*="col-"] {
+    padding-right: var(--spacing-sm);
+    padding-left: var(--spacing-sm);
+  }
+}
+
+/* Großer Desktop-Breakpoint (1200px) */
+@media (min-width: 1200px) {
+  .container {
+    max-width: var(--container-max-width);
+  }
+  
+  .d-xl-block {
+    display: block !important;
+  }
+  
+  .d-xl-none {
+    display: none !important;
+  }
+  
+  .d-xl-inline-block {
+    display: inline-block !important;
+  }
+  
+  .d-xl-inline {
+    display: inline !important;
+  }
+  
+  .d-xl-flex {
+    display: flex !important;
+  }
+}
+
+/* Druckoptimierungen */
+@media print {
+  .container {
+    max-width: 100%;
+    padding-right: 0;
+    padding-left: 0;
+  }
+  
+  .navbar,
+  .mobile-nav,
+  .footer,
+  .btn,
+  .no-print {
+    display: none !important;
+  }
+  
+  .card {
+    border: none !important;
+    box-shadow: none !important;
+  }
+  
+  .card-body {
+    padding: 0 !important;
+  }
+  
+  a[href]:after {
+    content: " (" attr(href) ")";
+  }
+  
+  abbr[title]:after {
+    content: " (" attr(title) ")";
+  }
+  
+  a[href^="#"]:after,
+  a[href^="javascript:"]:after {
+    content: "";
+  }
+}
+
+/* Spezifische Komponenten-Anpassungen */
+
+/* Responsive Vorschlagskarten */
+@media (max-width: 767.98px) {
+  .proposal-cards .card {
+    margin-bottom: var(--spacing-md);
+  }
+}
+
+/* Responsive Trend-Tags */
+.trends-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.trend-tag {
+  margin: var(--spacing-xs);
+}
+
+/* Responsive Kategoriekarten */
+@media (max-width: 767.98px) {
+  .category-card {
+    margin-bottom: var(--spacing-md);
+  }
+}
+
+/* Responsive Formulare */
+@media (max-width: 767.98px) {
+  .form-actions {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .form-actions .btn {
+    margin-bottom: var(--spacing-xs);
+  }
+}
+
+/* Responsive Vorschlagsdetails */
+@media (max-width: 767.98px) {
+  .proposal-details-header {
+    flex-direction: column;
+  }
+  
+  .proposal-details-header .proposal-status {
+    margin-top: var(--spacing-sm);
+    align-self: flex-start;
+  }
+  
+  .proposal-actions {
+    flex-direction: column;
+  }
+  
+  .proposal-actions .btn {
+    margin-bottom: var(--spacing-xs);
+  }
+}
+
+/* Responsive Timeline */
+@media (max-width: 767.98px) {
+  .timeline::before {
+    left: 20px;
+  }
+  
+  .timeline-item {
+    padding-left: 50px;
+  }
+  
+  .timeline-badge {
+    left: 10px;
+  }
+}
+
+/* Responsive Statistiken */
+.stats-container {
+  display: flex;
+  flex-wrap: wrap;
+  margin: calc(-1 * var(--spacing-sm));
+}
+
+.stat-card {
+  flex: 1 0 100%;
+  margin: var(--spacing-sm);
+}
+
+@media (min-width: 576px) {
+  .stat-card {
+    flex: 1 0 calc(50% - var(--spacing-md));
+  }
+}
+
+@media (min-width: 992px) {
+  .stat-card {
+    flex: 1 0 calc(25% - var(--spacing-md));
+  }
+}
+
+/* Responsive Ministeriumsportal */
+@media (max-width: 991.98px) {
+  .ministry-dashboard-sidebar {
+    margin-bottom: var(--spacing-md);
+  }
+}
+
+/* Barrierefreiheitsverbesserungen */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.focus-visible:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* High Contrast Mode Unterstützung */
+@media (forced-colors: active) {
+  .btn,
+  .card,
+  .form-control,
+  .badge {
+    border: 1px solid;
+  }
+}
+
+/* Unterstützung für dunklen Modus */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-white: #121212;
+    --color-gray-100: #1e1e1e;
+    --color-gray-300: #2d2d2d;
+    --color-gray-500: #5c5c5c;
+    --color-gray-700: #e0e0e0;
+    --color-black: #ffffff;
+    
+    --color-primary-dark: #4A90E2;
+    --color-primary: #5d9ee6;
+    --color-primary-light: #7fb1eb;
+    
+    --color-success-light: #0f3a1e;
+    --color-warning-light: #3d2f05;
+    --color-error-light: #3d1512;
+    --color-info-light: #0a2a4d;
+  }
+  
+  body {
+    color: var(--color-gray-700);
+    background-color: var(--color-white);
+  }
+  
+  .card,
+  .form-control,
+  .form-select {
+    background-color: var(--color-gray-100);
+    border-color: var(--color-gray-300);
+  }
+  
+  .navbar,
+  .footer {
+    background-color: var(--color-gray-100);
+  }
+  
+  .btn-secondary {
+    color: var(--color-primary-light);
+    background-color: transparent;
+    border-color: var(--color-primary-light);
+  }
+  
+  .text-muted {
+    color: var(--color-gray-500) !important;
+  }
+  
+  a {
+    color: var(--color-primary-light);
+  }
+  
+  .table th,
+  .table td {
+    border-color: var(--color-gray-300);
+  }
+  
+  .table thead th {
+    background-color: var(--color-gray-300);
+  }
+  
+  .table-striped tbody tr:nth-of-type(odd) {
+    background-color: var(--color-gray-100);
+  }
+  
+  .table-hover tbody tr:hover {
+    background-color: rgba(74, 144, 226, 0.1);
+  }
+}

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vorschlag einreichen - Bürgerbeteiligungssystem</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="bi bi-people-fill me-2"></i>Bürgerbeteiligungssystem
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Startseite</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="proposals.html">Vorschläge</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="submit-proposal.html">Vorschlag einreichen</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="statistics.html">Statistiken</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle me-1"></i>Max Mustermann
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="profile.html">Mein Profil</a></li>
+                            <li><a class="dropdown-item" href="my-proposals.html">Meine Vorschläge</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#">Abmelden</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="card-title mb-0">Neuen Vorschlag einreichen</h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="proposal-form">
+                            <div class="mb-3">
+                                <label for="proposal-title-input" class="form-label">Titel des Vorschlags*</label>
+                                <input type="text" class="form-control" id="proposal-title-input" required maxlength="100" placeholder="Geben Sie einen prägnanten Titel ein">
+                                <div class="form-text">Maximal 100 Zeichen</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="proposal-category" class="form-label">Kategorie*</label>
+                                <select class="form-select" id="proposal-category" required>
+                                    <option value="">Kategorie auswählen</option>
+                                    <!-- Kategorien werden per JavaScript geladen -->
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="proposal-content-input" class="form-label">Beschreibung des Vorschlags*</label>
+                                <textarea class="form-control" id="proposal-content-input" rows="8" required maxlength="5000" placeholder="Beschreiben Sie Ihren Vorschlag detailliert"></textarea>
+                                <div class="form-text">Maximal 5000 Zeichen</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="proposal-tags-input" class="form-label">Schlagwörter</label>
+                                <input type="text" class="form-control" id="proposal-tags-input" placeholder="Schlagwörter durch Kommas getrennt, z.B. Umwelt, Verkehr, Bildung">
+                                <div class="form-text">Fügen Sie relevante Schlagwörter hinzu, um Ihren Vorschlag besser auffindbar zu machen</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Anhänge (optional)</label>
+                                <input type="file" class="form-control" id="proposal-attachments" multiple>
+                                <div class="form-text">Maximal 3 Dateien, je maximal 5 MB</div>
+                            </div>
+                            
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="proposal-anonymous">
+                                <label class="form-check-label" for="proposal-anonymous">Vorschlag anonym einreichen</label>
+                            </div>
+                            
+                            <div class="mb-4 form-check">
+                                <input type="checkbox" class="form-check-input" id="proposal-terms" required>
+                                <label class="form-check-label" for="proposal-terms">Ich akzeptiere die <a href="#">Nutzungsbedingungen</a> und <a href="#">Datenschutzbestimmungen</a>*</label>
+                            </div>
+                            
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle-fill me-2"></i>
+                                <strong>Hinweis:</strong> Ihr Vorschlag wird nach dem Einreichen von unserem KI-System analysiert und kategorisiert, bevor er an das zuständige Ministerium weitergeleitet wird.
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary">Vorschlag einreichen</button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="window.location.href='index.html'">Abbrechen</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white mt-5 py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Bürgerbeteiligungssystem</h5>
+                    <p>Eine Plattform für direkte Demokratie und Bürgerbeteiligung.</p>
+                </div>
+                <div class="col-md-3">
+                    <h5>Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white">Über uns</a></li>
+                        <li><a href="#" class="text-white">Kontakt</a></li>
+                        <li><a href="#" class="text-white">Hilfe</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>Rechtliches</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white">Datenschutz</a></li>
+                        <li><a href="#" class="text-white">Impressum</a></li>
+                        <li><a href="#" class="text-white">Nutzungsbedingungen</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr>
+            <div class="text-center">
+                <p class="mb-0">&copy; 2025 Bürgerbeteiligungssystem. Alle Rechte vorbehalten.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

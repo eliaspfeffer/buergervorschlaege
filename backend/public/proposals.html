@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vorschläge - Bürgerbeteiligungssystem</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="bi bi-people-fill me-2"></i>Bürgerbeteiligungssystem
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Startseite</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="proposals.html">Vorschläge</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="submit-proposal.html">Vorschlag einreichen</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="statistics.html">Statistiken</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle me-1"></i>Max Mustermann
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="profile.html">Mein Profil</a></li>
+                            <li><a class="dropdown-item" href="my-proposals.html">Meine Vorschläge</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#">Abmelden</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h1 class="mb-4">Vorschläge durchsuchen</h1>
+        
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">Filter</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="filter-form">
+                            <div class="mb-3">
+                                <label for="category-filter" class="form-label">Kategorie</label>
+                                <select class="form-select" id="category-filter">
+                                    <option value="">Alle Kategorien</option>
+                                    <!-- Kategorien werden per JavaScript geladen -->
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="status-filter" class="form-label">Status</label>
+                                <select class="form-select" id="status-filter">
+                                    <option value="">Alle Status</option>
+                                    <option value="submitted">Eingereicht</option>
+                                    <option value="processing">In Bearbeitung</option>
+                                    <option value="answered">Beantwortet</option>
+                                    <option value="completed">Umgesetzt</option>
+                                    <option value="rejected">Abgelehnt</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="ministry-filter" class="form-label">Ministerium</label>
+                                <select class="form-select" id="ministry-filter">
+                                    <option value="">Alle Ministerien</option>
+                                    <option value="Verkehrsministerium">Verkehrsministerium</option>
+                                    <option value="Umweltministerium">Umweltministerium</option>
+                                    <option value="Bildungsministerium">Bildungsministerium</option>
+                                    <option value="Gesundheitsministerium">Gesundheitsministerium</option>
+                                    <option value="Wirtschaftsministerium">Wirtschaftsministerium</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="search-input" class="form-label">Suchbegriff</label>
+                                <input type="text" class="form-control" id="search-input" placeholder="Suchbegriff eingeben">
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">Filtern</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">Kategorien</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush" id="categories-list">
+                            <!-- Kategorien werden per JavaScript geladen -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-9">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h2 class="mb-0">Alle Vorschläge</h2>
+                    </div>
+                    <div>
+                        <select class="form-select" id="sort-select">
+                            <option value="newest">Neueste zuerst</option>
+                            <option value="oldest">Älteste zuerst</option>
+                            <option value="most_votes">Meiste Stimmen</option>
+                            <option value="least_votes">Wenigste Stimmen</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="proposals-list">
+                    <!-- Vorschläge werden per JavaScript geladen -->
+                </div>
+                
+                <nav aria-label="Seitennavigation" class="mt-4">
+                    <div id="pagination" class="d-flex justify-content-center">
+                        <!-- Paginierung wird per JavaScript geladen -->
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white mt-5 py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Bürgerbeteiligungssystem</h5>
+                    <p>Eine Plattform für direkte Demokratie und Bürgerbeteiligung.</p>
+                </div>
+                <div class="col-md-3">
+                    <h5>Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white">Über uns</a></li>
+                        <li><a href="#" class="text-white">Kontakt</a></li>
+                        <li><a href="#" class="text-white">Hilfe</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>Rechtliches</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white">Datenschutz</a></li>
+                        <li><a href="#" class="text-white">Impressum</a></li>
+                        <li><a href="#" class="text-white">Nutzungsbedingungen</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr>
+            <div class="text-center">
+                <p class="mb-0">&copy; 2025 Bürgerbeteiligungssystem. Alle Rechte vorbehalten.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

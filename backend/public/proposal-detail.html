@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vorschlagsdetails - Bürgerbeteiligungssystem</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="bi bi-people-fill me-2"></i>Bürgerbeteiligungssystem
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Startseite</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="proposals.html">Vorschläge</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="submit-proposal.html">Vorschlag einreichen</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="statistics.html">Statistiken</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle me-1"></i>Max Mustermann
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="profile.html">Mein Profil</a></li>
+                            <li><a class="dropdown-item" href="my-proposals.html">Meine Vorschläge</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#">Abmelden</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="index.html">Startseite</a></li>
+                <li class="breadcrumb-item"><a href="proposals.html">Vorschläge</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Vorschlagsdetails</li>
+            </ol>
+        </nav>
+        
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h1 id="proposal-title" class="card-title mb-3">Vorschlagstitel wird geladen...</h1>
+                        
+                        <div class="d-flex flex-wrap align-items-center mb-3">
+                            <span id="proposal-category" class="proposal-category me-2">Kategorie</span>
+                            <span id="proposal-status" class="status-badge me-2">Status</span>
+                            <small class="text-muted me-3">Eingereicht am <span id="proposal-date">Datum</span></small>
+                            <small class="text-muted">Von <span id="proposal-author">Autor</span></small>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <p id="proposal-content" class="card-text">Inhalt wird geladen...</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6>Schlagwörter:</h6>
+                            <div id="proposal-tags">
+                                <!-- Tags werden per JavaScript geladen -->
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <button class="btn btn-primary" onclick="voteForProposal(getUrlParameter('id'))">
+                                <i class="bi bi-hand-thumbs-up me-1"></i> Unterstützen (<span id="proposal-votes">0</span>)
+                            </button>
+                            <div>
+                                <button class="btn btn-outline-primary me-2">
+                                    <i class="bi bi-share me-1"></i> Teilen
+                                </button>
+                                <button class="btn btn-outline-primary">
+                                    <i class="bi bi-flag me-1"></i> Melden
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">KI-Analyse</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Qualität:</label>
+                            <div class="progress">
+                                <div id="ai-quality" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Relevanz:</label>
+                            <div class="progress">
+                                <div id="ai-relevance" class="progress-bar bg-info" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Umsetzbarkeit:</label>
+                            <div class="progress">
+                                <div id="ai-feasibility" class="progress-bar bg-warning" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">Kommentare</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="comments-list">
+                            <!-- Kommentare werden per JavaScript geladen -->
+                        </div>
+                        
+                        <hr>
+                        
+                        <h6>Neuen Kommentar hinzufügen</h6>
+                        <form id="comment-form">
+                            <div class="mb-3">
+                                <textarea class="form-control" id="comment-content" rows="3" placeholder="Schreiben Sie Ihren Kommentar..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Kommentar absenden</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">Zuständigkeit</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Dieser Vorschlag wurde an folgendes Ministerium weitergeleitet:</p>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-building me-2 fs-4"></i>
+                            <span id="proposal-ministry" class="fs-5">Ministerium wird geladen...</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">Ähnliche Vorschläge</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            <a href="#" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">Mehr Fahrradwege in der Stadt</h6>
+                                    <small class="text-muted">15.03.2025</small>
+                                </div>
+                                <small class="text-muted">42 Unterstützer</small>
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">Verbesserung des ÖPNV</h6>
+                                    <small class="text-muted">20.03.2025</small>
+                                </div>
+                                <small class="text-muted">29 Unterstützer</small>
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">Verkehrsberuhigte Zonen</h6>
+                                    <small class="text-muted">10.03.2025</small>
+                                </div>
+                                <small class="text-muted">18 Unterstützer</small>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">Statusverlauf</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>Eingereicht</strong>
+                                    <div class="text-muted">15.03.2025</div>
+                                </div>
+                                <span class="badge bg-success rounded-pill">✓</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>KI-Analyse</strong>
+                                    <div class="text-muted">15.03.2025</div>
+                                </div>
+                                <span class="badge bg-success rounded-pill">✓</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>Ministerium zugewiesen</strong>
+                                    <div class="text-muted">16.03.2025</div>
+                                </div>
+                                <span class="badge bg-success rounded-pill">✓</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>In Bearbeitung</strong>
+                                    <div class="text-muted">Ausstehend</div>
+                                </div>
+                                <span class="badge bg-secondary rounded-pill">...</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white mt-5 py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Bürgerbeteiligungssystem</h5>
+                    <p>Eine Plattform für direkte Demokratie und Bürgerbeteiligung.</p>
+                </div>
+                <div class="col-md-3">
+                    <h5>Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white">Über uns</a></li>
+                        <li><a href="#" class="text-white">Kontakt</a></li>
+                        <li><a href="#" class="text-white">Hilfe</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>Rechtliches</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white">Datenschutz</a></li>
+                        <li><a href="#" class="text-white">Impressum</a></li>
+                        <li><a href="#" class="text-white">Nutzungsbedingungen</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr>
+            <div class="text-center">
+                <p class="mb-0">&copy; 2025 Bürgerbeteiligungssystem. Alle Rechte vorbehalten.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
