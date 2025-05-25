@@ -523,6 +523,8 @@ class ProposalProcessor:
             "feasibility": float(scores[1]),
             "clarity": float(scores[2]),
             "constructiveness": float(scores[3]),
+            "sustainability": float(scores[4]),
+            "innovation": float(scores[5]),
             "overall_quality": float(np.mean(scores))
         }
         
